@@ -1,13 +1,22 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import HeroSection from "@/components/landing/HeroSection";
+import WhatIsSynthSection from "@/components/landing/WhatIsSynthSection";
+import WhyDifferentSection from "@/components/landing/WhyDifferentSection";
+import ICPSection from "@/components/landing/ICPSection";
+import ExampleAutomationsSection from "@/components/landing/ExampleAutomationsSection";
+import HowItWorksSection from "@/components/landing/HowItWorksSection";
+import FooterSection from "@/components/landing/FooterSection";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <main className="min-h-screen overflow-x-hidden">
+      <HeroSection />
+      <WhatIsSynthSection />
+      <WhyDifferentSection />
+      <ICPSection />
+      <ExampleAutomationsSection />
+      <HowItWorksSection />
+      <FooterSection />
+    </main>
   );
 };
 
