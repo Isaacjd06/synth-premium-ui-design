@@ -74,10 +74,10 @@ const WhyDifferentSection = () => {
                     <feature.icon className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors duration-300">
+                    <h3 className="text-xl font-semibold mb-3 text-foreground group-hover:text-primary transition-colors duration-300">
                       {feature.title}
                     </h3>
-                    <p className="text-muted-foreground leading-relaxed">
+                    <p className="text-foreground/70 leading-relaxed">
                       {feature.description}
                     </p>
                   </div>
