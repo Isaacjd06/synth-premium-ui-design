@@ -9,138 +9,187 @@ import {
   Database, 
   Share2,
   MessageSquare,
-  PieChart
+  PieChart,
+  Play,
+  ArrowRight
 } from "lucide-react";
 
 const automations = [
   {
     icon: Mail,
     title: "Smart Email Routing",
-    description: "Automatically categorize and route incoming emails to the right team.",
+    description: "Trigger: Incoming email → Transform: Categorize & extract → Execute: Route to team",
+    type: "trigger",
   },
   {
     icon: FileText,
     title: "Document Processing",
-    description: "Extract data from documents and sync to your systems instantly.",
+    description: "Trigger: Document uploaded → Transform: Extract data → Execute: Sync to systems",
+    type: "transformer",
   },
   {
     icon: Calendar,
     title: "Meeting Intelligence",
-    description: "Auto-schedule follow-ups and create tasks from meeting notes.",
+    description: "Trigger: Meeting ends → Transform: Parse notes → Execute: Create tasks & follow-ups",
+    type: "orchestrator",
   },
   {
     icon: Bell,
     title: "Alert Orchestration",
-    description: "Smart notifications that reach the right person at the right time.",
+    description: "Trigger: Event detected → Transform: Assess priority → Execute: Notify right person",
+    type: "trigger",
   },
   {
     icon: Database,
     title: "Data Synchronization",
-    description: "Keep all your tools in perfect sync without manual exports.",
+    description: "Trigger: Data changed → Transform: Map fields → Execute: Update all connected tools",
+    type: "transformer",
   },
   {
     icon: Share2,
-    title: "Cross-Platform Workflows",
-    description: "Connect 500+ apps and create seamless cross-platform flows.",
+    title: "Cross-Platform Flows",
+    description: "Trigger: Action in App A → Transform: Process → Execute: Actions in Apps B, C, D",
+    type: "orchestrator",
   },
   {
     icon: MessageSquare,
     title: "Customer Response",
-    description: "Draft personalized responses using context from your CRM.",
+    description: "Trigger: New inquiry → Transform: Context lookup → Execute: Draft personalized reply",
+    type: "trigger",
   },
   {
     icon: PieChart,
     title: "Report Generation",
-    description: "Automated reports that compile data from multiple sources.",
+    description: "Trigger: Schedule/request → Transform: Aggregate data → Execute: Generate & distribute",
+    type: "transformer",
   },
 ];
+
+const typeColors = {
+  trigger: "from-emerald-500/20 to-emerald-500/5",
+  transformer: "from-primary/20 to-primary/5",
+  orchestrator: "from-violet-500/20 to-violet-500/5",
+};
 
 const ExampleAutomationsSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section ref={ref} className="py-36 md:py-48 relative overflow-hidden">
-      {/* Alternating gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-synth-navy/50 to-transparent" />
+    <section ref={ref} className="py-40 md:py-52 relative overflow-hidden">
+      {/* Background with alternating gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-synth-navy/40 to-transparent" />
       
       {/* Neural network nodes */}
       <div className="absolute inset-0 overflow-hidden">
-        {[...Array(4)].map((_, i) => (
+        {[...Array(5)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 rounded-full bg-primary/30"
+            className="absolute w-2 h-2 rounded-full bg-primary/25"
             style={{
-              left: `${20 + i * 20}%`,
-              top: `${25 + (i % 2) * 50}%`,
+              left: `${15 + i * 18}%`,
+              top: `${20 + (i % 3) * 30}%`,
             }}
             animate={{ 
-              scale: [1, 1.8, 1], 
-              opacity: [0.3, 0.7, 0.3] 
+              scale: [1, 1.5, 1], 
+              opacity: [0.2, 0.5, 0.2] 
             }}
             transition={{ 
-              duration: 4 + i, 
+              duration: 5 + i, 
               repeat: Infinity,
-              delay: i * 0.5,
+              delay: i * 0.7,
             }}
           />
         ))}
       </div>
       
-      {/* Subtle grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(217_50%_50%/0.015)_1px,transparent_1px),linear-gradient(to_bottom,hsl(217_50%_50%/0.015)_1px,transparent_1px)] bg-[size:50px_50px]" />
+      {/* Grid pattern */}
+      <div className="absolute inset-0 grid-nodes opacity-25" />
       
       <div className="container px-6 relative z-10">
         <div className="text-center mb-20 md:mb-24">
           <motion.span
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="inline-block text-sm font-accent text-primary uppercase tracking-widest mb-5"
+            className="inline-block text-sm font-accent text-primary uppercase tracking-widest mb-6"
           >
-            Example Automations
+            Workflow Library
           </motion.span>
 
           <motion.h2
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 25 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.7, delay: 0.1 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-display-bold tracking-tight text-foreground max-w-3xl mx-auto"
           >
             Endless possibilities, <span className="text-gradient-accent">zero limits</span>
           </motion.h2>
+          
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-6 text-foreground/60 max-w-xl mx-auto"
+          >
+            Each automation follows the pattern: <span className="text-primary/80">Trigger</span> → <span className="text-foreground/80">Transform</span> → <span className="text-primary/80">Execute</span>
+          </motion.p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 max-w-6xl mx-auto">
           {automations.map((automation, index) => (
             <motion.div
               key={automation.title}
-              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              initial={{ opacity: 0, y: 35, scale: 0.96 }}
               animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
-              transition={{ duration: 0.5, delay: 0.1 + index * 0.06 }}
+              transition={{ duration: 0.6, delay: 0.1 + index * 0.07 }}
             >
               <motion.div
-                whileHover={{ y: -6, scale: 1.02 }}
+                whileHover={{ y: -5 }}
                 transition={{ duration: 0.3 }}
-                className="group h-full p-6 lg:p-7 rounded-2xl card-premium relative overflow-hidden"
+                className="group h-full p-6 rounded-xl card-node relative overflow-hidden"
               >
-                <motion.div 
-                  className="w-11 h-11 rounded-xl bg-primary/12 border border-primary/20 flex items-center justify-center mb-5 transition-all duration-300 group-hover:bg-primary/25 group-hover:border-primary/50 icon-glow"
-                  whileHover={{ rotate: 5 }}
-                >
-                  <automation.icon className="w-5 h-5 text-primary" />
-                </motion.div>
+                {/* Type indicator gradient */}
+                <div className={`absolute top-0 left-0 right-0 h-px bg-gradient-to-r ${typeColors[automation.type as keyof typeof typeColors]} opacity-0 group-hover:opacity-100 transition-opacity duration-400`} />
                 
-                <h3 className="text-base font-display font-semibold text-foreground mb-2.5 group-hover:text-primary transition-colors duration-300">
+                {/* Icon as workflow node */}
+                <div className="relative mb-5">
+                  <motion.div 
+                    className="w-11 h-11 rounded-lg bg-primary/8 border border-primary/15 flex items-center justify-center transition-all duration-300 group-hover:bg-primary/15 group-hover:border-primary/30 icon-node"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <automation.icon className="w-5 h-5 text-primary" />
+                  </motion.div>
+                  
+                  {/* Flow indicator */}
+                  <motion.div
+                    className="absolute -right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  >
+                    <ArrowRight className="w-3 h-3 text-primary/40" />
+                  </motion.div>
+                </div>
+                
+                <h3 className="text-base font-display font-semibold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">
                   {automation.title}
                 </h3>
                 
-                <p className="text-sm text-foreground/65 leading-relaxed">
+                <p className="text-sm text-foreground/55 leading-relaxed">
                   {automation.description}
                 </p>
                 
-                {/* Subtle hover glow edge */}
-                <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-primary/0 group-hover:ring-primary/20 transition-all duration-300 pointer-events-none" />
+                {/* Workflow activation glow on hover */}
+                <motion.div
+                  className="absolute inset-0 rounded-xl pointer-events-none"
+                  style={{
+                    background: "linear-gradient(135deg, transparent, hsl(217 100% 60% / 0.03), transparent)",
+                  }}
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.4 }}
+                />
+                
+                {/* Perimeter glow path on hover */}
+                <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-primary/0 group-hover:ring-primary/15 transition-all duration-400 pointer-events-none" />
               </motion.div>
             </motion.div>
           ))}

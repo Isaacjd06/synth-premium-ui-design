@@ -1,26 +1,29 @@
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
-import { MessageCircle, Wand2, Rocket } from "lucide-react";
+import { MessageCircle, Wand2, Rocket, ArrowRight } from "lucide-react";
 
 const steps = [
   {
     number: "01",
     icon: MessageCircle,
-    title: "Tell Synth what you want",
-    description: "Describe your automation in plain English. No technical jargon, no complex setups—just tell us what you need.",
+    title: "Express your intent",
+    description: "Describe what you want to automate in plain language. Synth understands context, not just keywords.",
+    phase: "Input",
   },
   {
     number: "02",
     icon: Wand2,
-    title: "Synth builds your automation",
-    description: "Our AI understands your intent and creates a custom workflow. Review, tweak, or let it run as-is.",
+    title: "Synth builds the system",
+    description: "Our AI interprets your intent, constructs the workflow logic, and connects all necessary components.",
+    phase: "Processing",
   },
   {
     number: "03",
     icon: Rocket,
-    title: "Your workflows run automatically",
-    description: "Sit back while Synth handles the repetitive work. Monitor everything from a simple dashboard.",
+    title: "Automation runs autonomously",
+    description: "Your workflow executes automatically, adapts to changes, and reports back through a simple dashboard.",
+    phase: "Execution",
   },
 ];
 
@@ -29,25 +32,25 @@ const HowItWorksSection = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section ref={ref} id="how-it-works" className="py-36 md:py-48 relative overflow-hidden">
-      {/* Seamless background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-synth-surface/25 to-background" />
+    <section ref={ref} id="how-it-works" className="py-40 md:py-52 relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-synth-surface/20 to-background" />
       
       <div className="container px-6 relative z-10">
         <div className="text-center mb-20 md:mb-28">
           <motion.span
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="inline-block text-sm font-accent text-primary uppercase tracking-widest mb-5"
+            className="inline-block text-sm font-accent text-primary uppercase tracking-widest mb-6"
           >
-            How It Works
+            The Process
           </motion.span>
 
           <motion.h2
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 25 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.7, delay: 0.1 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-display-bold tracking-tight"
           >
             Three steps to <span className="text-gradient-accent">automation bliss</span>
@@ -56,56 +59,85 @@ const HowItWorksSection = () => {
 
         <div className="max-w-5xl mx-auto">
           <div className="grid md:grid-cols-3 gap-10 md:gap-6 relative">
-            {/* Glowing timeline connector - desktop only */}
-            <div className="hidden md:block absolute top-24 left-[18%] right-[18%] h-0.5">
+            {/* Glowing data pipeline connector */}
+            <div className="hidden md:block absolute top-[72px] left-[20%] right-[20%] h-[3px] rounded-full overflow-hidden">
+              {/* Base line */}
               <motion.div
                 initial={{ scaleX: 0 }}
                 animate={isInView ? { scaleX: 1 } : {}}
-                transition={{ duration: 1.2, delay: 0.5 }}
-                className="h-full origin-left rounded-full"
-                style={{
-                  background: "linear-gradient(90deg, hsl(217 100% 60% / 0.2), hsl(217 100% 60% / 0.5), hsl(217 100% 60% / 0.2))",
-                  boxShadow: "0 0 20px hsl(217 100% 60% / 0.3)",
-                }}
+                transition={{ duration: 1.5, delay: 0.5 }}
+                className="absolute inset-0 origin-left bg-gradient-to-r from-primary/20 via-primary/35 to-primary/20"
               />
-              {/* Animated traveling dot */}
+              
+              {/* Animated data flow */}
               <motion.div
-                className="absolute top-1/2 w-3 h-3 rounded-full bg-primary -translate-y-1/2"
-                animate={{ left: ["0%", "100%", "0%"] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                style={{ 
-                  boxShadow: "0 0 15px hsl(217 100% 60%), 0 0 30px hsl(217 100% 60% / 0.5)" 
+                className="absolute top-0 bottom-0 w-24"
+                style={{
+                  background: "linear-gradient(90deg, transparent, hsl(217 100% 70% / 0.6), hsl(200 100% 75% / 0.8), hsl(217 100% 70% / 0.6), transparent)",
                 }}
+                animate={isInView ? { left: ["-20%", "120%"] } : {}}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
               />
+              
+              {/* Glow effect */}
+              <div className="absolute inset-0 blur-sm bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+            </div>
+
+            {/* Node connection points */}
+            <div className="hidden md:flex absolute top-[70px] left-[20%] right-[20%] justify-between px-1">
+              {[0, 1, 2].map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ scale: 0 }}
+                  animate={isInView ? { scale: 1 } : {}}
+                  transition={{ duration: 0.4, delay: 0.8 + i * 0.2 }}
+                  className="w-2 h-2 rounded-full bg-primary shadow-neon"
+                  style={{ marginLeft: i === 0 ? '-4px' : undefined, marginRight: i === 2 ? '-4px' : undefined }}
+                />
+              ))}
             </div>
 
             {steps.map((step, index) => (
               <motion.div
                 key={step.number}
-                initial={{ opacity: 0, y: 60 }}
+                initial={{ opacity: 0, y: 50 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.6, delay: 0.3 + index * 0.2 }}
+                transition={{ duration: 0.7, delay: 0.3 + index * 0.2 }}
                 className="relative"
               >
                 <motion.div
-                  whileHover={{ y: -8, scale: 1.02 }}
+                  whileHover={{ y: -6 }}
                   transition={{ duration: 0.4 }}
                   className="group text-center"
                 >
-                  {/* Step number and icon */}
+                  {/* Step icon node */}
                   <div className="relative inline-block mb-10">
                     <motion.div
-                      whileHover={{ scale: 1.08, rotate: 3 }}
-                      className="w-20 h-20 rounded-3xl glass-premium flex items-center justify-center relative z-10 transition-all duration-500 group-hover:shadow-neon"
+                      whileHover={{ scale: 1.06 }}
+                      className="w-20 h-20 rounded-2xl glass-node flex items-center justify-center relative z-10 transition-all duration-400 group-hover:shadow-node"
                     >
                       <step.icon className="w-8 h-8 text-primary" />
+                      
+                      {/* Thinking pulse animation */}
+                      <motion.div
+                        className="absolute inset-0 rounded-2xl border border-primary/25"
+                        animate={isInView ? { 
+                          scale: [1, 1.12, 1],
+                          opacity: [0.4, 0, 0.4],
+                        } : {}}
+                        transition={{ 
+                          duration: 3.5, 
+                          repeat: Infinity, 
+                          delay: index * 1,
+                        }}
+                      />
                     </motion.div>
                     
-                    {/* Step number badge */}
+                    {/* Step number */}
                     <motion.span 
-                      className="absolute -top-4 -right-4 text-5xl font-display-bold"
+                      className="absolute -top-3 -right-3 text-4xl font-display-bold"
                       style={{
-                        background: "linear-gradient(180deg, hsl(217 100% 60% / 0.5), hsl(217 100% 60% / 0.15))",
+                        background: "linear-gradient(180deg, hsl(217 100% 60% / 0.55), hsl(217 100% 60% / 0.15))",
                         WebkitBackgroundClip: "text",
                         WebkitTextFillColor: "transparent",
                       }}
@@ -113,28 +145,36 @@ const HowItWorksSection = () => {
                       {step.number}
                     </motion.span>
                     
-                    {/* Pulse ring animation */}
+                    {/* Phase label */}
                     <motion.div
-                      className="absolute inset-0 rounded-3xl border-2 border-primary/30"
-                      animate={isInView ? { 
-                        scale: [1, 1.15, 1],
-                        opacity: [0.5, 0, 0.5],
-                      } : {}}
-                      transition={{ 
-                        duration: 3, 
-                        repeat: Infinity, 
-                        delay: index * 0.8,
-                      }}
-                    />
+                      initial={{ opacity: 0 }}
+                      animate={isInView ? { opacity: 1 } : {}}
+                      transition={{ delay: 0.8 + index * 0.2 }}
+                      className="absolute -bottom-6 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full glass-node text-[10px] font-accent text-primary/70 uppercase tracking-wider"
+                    >
+                      {step.phase}
+                    </motion.div>
                   </div>
 
                   <h3 className="text-xl md:text-2xl font-display font-semibold mb-4 text-foreground group-hover:text-primary transition-colors duration-300">
                     {step.title}
                   </h3>
 
-                  <p className="text-foreground/70 leading-relaxed max-w-xs mx-auto">
+                  <p className="text-foreground/60 leading-relaxed max-w-xs mx-auto">
                     {step.description}
                   </p>
+                  
+                  {/* Arrow indicator for mobile */}
+                  {index < steps.length - 1 && (
+                    <div className="md:hidden flex justify-center mt-8 mb-4">
+                      <motion.div
+                        animate={{ y: [0, 4, 0] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <ArrowRight className="w-5 h-5 text-primary/40 rotate-90" />
+                      </motion.div>
+                    </div>
+                  )}
                 </motion.div>
               </motion.div>
             ))}
