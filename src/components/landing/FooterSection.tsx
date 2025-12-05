@@ -23,7 +23,7 @@ const FooterSection = () => {
           </div>
 
           {/* Copyright */}
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-foreground/60">
             © Synth — All rights reserved.
           </p>
         </motion.div>

@@ -72,11 +72,11 @@ const ICPSection = () => {
                     <persona.icon className="w-7 h-7 text-primary" />
                   </div>
                   
-                  <h3 className="text-2xl font-semibold mb-4">
+                  <h3 className="text-2xl font-semibold mb-4 text-foreground">
                     {persona.title}
                   </h3>
                   
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-foreground/70 leading-relaxed">
                     {persona.description}
                   </p>
                 </div>

@@ -35,7 +35,7 @@ const WhatIsSynthSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="space-y-6 text-lg md:text-xl text-muted-foreground leading-relaxed"
+            className="space-y-6 text-lg md:text-xl text-foreground/70 leading-relaxed"
           >
             <p>
               Synth is an AI-native automation platform that understands your 

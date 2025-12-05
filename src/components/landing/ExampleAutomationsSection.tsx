@@ -71,7 +71,7 @@ const ExampleAutomationsSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="inline-block text-sm font-semibold text-synth-blue-light uppercase tracking-wider mb-4"
+            className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-4"
           >
             Example Automations
           </motion.span>
@@ -82,7 +82,7 @@ const ExampleAutomationsSection = () => {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-display text-foreground max-w-3xl mx-auto"
           >
-            Endless possibilities, <span className="text-synth-blue-light">zero limits</span>
+            Endless possibilities, <span className="text-primary">zero limits</span>
           </motion.h2>
         </div>
 
@@ -107,7 +107,7 @@ const ExampleAutomationsSection = () => {
                   {automation.title}
                 </h3>
                 
-                <p className="text-sm text-white/50 leading-relaxed">
+                <p className="text-sm text-foreground/60 leading-relaxed">
                   {automation.description}
                 </p>
               </motion.div>

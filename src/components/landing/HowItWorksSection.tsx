@@ -87,16 +87,16 @@ const HowItWorksSection = () => {
                     >
                       <step.icon className="w-8 h-8 text-primary" />
                     </motion.div>
-                    <span className="absolute -top-3 -right-3 text-5xl font-display text-primary/20 font-bold">
+                    <span className="absolute -top-3 -right-3 text-5xl font-display text-primary/30 font-bold">
                       {step.number}
                     </span>
                   </div>
 
-                  <h3 className="text-xl md:text-2xl font-semibold mb-4 group-hover:text-primary transition-colors duration-300">
+                  <h3 className="text-xl md:text-2xl font-semibold mb-4 text-foreground group-hover:text-primary transition-colors duration-300">
                     {step.title}
                   </h3>
 
-                  <p className="text-muted-foreground leading-relaxed max-w-xs mx-auto">
+                  <p className="text-foreground/70 leading-relaxed max-w-xs mx-auto">
                     {step.description}
                   </p>
                 </motion.div>

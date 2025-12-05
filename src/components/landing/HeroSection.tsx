@@ -49,7 +49,7 @@ const HeroSection = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8"
           >
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-muted-foreground">
+            <span className="text-sm font-medium text-foreground/80">
               AI-Powered Automation Platform
             </span>
           </motion.div>
@@ -71,7 +71,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
+            className="text-lg md:text-xl text-foreground/70 max-w-2xl mx-auto mb-10"
           >
             Synth transforms how teams work by building intelligent automations 
             that learn and adapt. No code required, infinite possibilities.
@@ -99,72 +99,13 @@ const HeroSection = () => {
             <motion.a
               href="#how-it-works"
               whileHover={{ x: 4 }}
-              className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors duration-300 font-medium"
+              className="flex items-center gap-2 text-foreground/70 hover:text-primary transition-colors duration-300 font-medium"
             >
               See how Synth works
               <ArrowRight className="w-4 h-4" />
             </motion.a>
           </motion.div>
         </div>
-
-        {/* Abstract visual element */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, delay: 0.5 }}
-          className="mt-16 md:mt-24 max-w-5xl mx-auto"
-        >
-          <div className="relative aspect-[16/9] rounded-3xl overflow-hidden glass-strong shadow-card">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-synth-blue-light/5" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="grid grid-cols-3 gap-4 p-8 w-full max-w-3xl">
-                {[...Array(9)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5, delay: 0.6 + i * 0.1 }}
-                    className={`aspect-square rounded-2xl ${
-                      i === 4 
-                        ? "bg-primary/30 border-2 border-primary/50" 
-                        : "bg-secondary/50 border border-border"
-                    } backdrop-blur-sm`}
-                  />
-                ))}
-              </div>
-            </div>
-            {/* Connecting lines */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none">
-              <motion.line
-                x1="33%" y1="50%" x2="50%" y2="50%"
-                stroke="hsl(var(--primary))"
-                strokeWidth="2"
-                strokeDasharray="8 4"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 0.5 }}
-                transition={{ duration: 1.5, delay: 1.5 }}
-              />
-              <motion.line
-                x1="50%" y1="33%" x2="50%" y2="50%"
-                stroke="hsl(var(--primary))"
-                strokeWidth="2"
-                strokeDasharray="8 4"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 0.5 }}
-                transition={{ duration: 1.5, delay: 1.7 }}
-              />
-              <motion.line
-                x1="67%" y1="50%" x2="50%" y2="50%"
-                stroke="hsl(var(--primary))"
-                strokeWidth="2"
-                strokeDasharray="8 4"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 0.5 }}
-                transition={{ duration: 1.5, delay: 1.9 }}
-              />
-            </svg>
-          </div>
-        </motion.div>
       </div>
 
       {/* Bottom fade */}
