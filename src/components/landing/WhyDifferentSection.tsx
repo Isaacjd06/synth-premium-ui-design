@@ -31,9 +31,9 @@ const WhyDifferentSection = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section ref={ref} className="py-32 md:py-40 bg-synth-mist relative overflow-hidden">
+    <section ref={ref} className="py-32 md:py-40 bg-synth-surface relative overflow-hidden">
       {/* Background pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(45deg,hsl(var(--primary)/0.02)_25%,transparent_25%,transparent_75%,hsl(var(--primary)/0.02)_75%)] bg-[size:60px_60px]" />
+      <div className="absolute inset-0 bg-[linear-gradient(45deg,hsl(var(--primary)/0.03)_25%,transparent_25%,transparent_75%,hsl(var(--primary)/0.03)_75%)] bg-[size:60px_60px]" />
       
       <div className="container px-6 relative z-10">
         <div className="text-center mb-16 md:mb-20">
@@ -41,7 +41,7 @@ const WhyDifferentSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="inline-block text-sm font-medium text-primary uppercase tracking-wider mb-4"
+            className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-4"
           >
             Why Different
           </motion.span>
@@ -52,7 +52,7 @@ const WhyDifferentSection = () => {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-display"
           >
-            Built for the <span className="text-gradient italic">modern</span> team
+            Built for the <span className="text-gradient">modern</span> team
           </motion.h2>
         </div>
 
@@ -70,7 +70,7 @@ const WhyDifferentSection = () => {
                 className="group h-full p-8 rounded-3xl bg-card-gradient glass-strong hover:shadow-glow transition-all duration-500"
               >
                 <div className="flex items-start gap-5">
-                  <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
+                  <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center group-hover:bg-primary/25 transition-colors duration-300">
                     <feature.icon className="w-6 h-6 text-primary" />
                   </div>
                   <div>

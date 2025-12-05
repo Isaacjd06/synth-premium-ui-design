@@ -62,7 +62,7 @@ const ExampleAutomationsSection = () => {
   return (
     <section ref={ref} className="py-32 md:py-40 bg-synth-navy relative overflow-hidden">
       {/* Background elements */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--synth-blue-glow)/0.15),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--synth-blue-glow)/0.1),transparent_50%)]" />
       <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(0_0%_100%/0.02)_1px,transparent_1px),linear-gradient(to_bottom,hsl(0_0%_100%/0.02)_1px,transparent_1px)] bg-[size:40px_40px]" />
       
       <div className="container px-6 relative z-10">
@@ -71,7 +71,7 @@ const ExampleAutomationsSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="inline-block text-sm font-medium text-synth-blue-light uppercase tracking-wider mb-4"
+            className="inline-block text-sm font-semibold text-synth-blue-light uppercase tracking-wider mb-4"
           >
             Example Automations
           </motion.span>
@@ -80,9 +80,9 @@ const ExampleAutomationsSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-display text-primary-foreground max-w-3xl mx-auto"
+            className="text-4xl md:text-5xl lg:text-6xl font-display text-foreground max-w-3xl mx-auto"
           >
-            Endless possibilities, <span className="italic text-synth-blue-light">zero limits</span>
+            Endless possibilities, <span className="text-synth-blue-light">zero limits</span>
           </motion.h2>
         </div>
 
@@ -97,17 +97,17 @@ const ExampleAutomationsSection = () => {
               <motion.div
                 whileHover={{ y: -4, scale: 1.02 }}
                 transition={{ duration: 0.3 }}
-                className="group h-full p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-synth-blue-light/30 transition-all duration-300"
+                className="group h-full p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-primary/40 transition-all duration-300"
               >
-                <div className="w-10 h-10 rounded-xl bg-synth-blue-light/20 flex items-center justify-center mb-4 group-hover:bg-synth-blue-light/30 transition-colors duration-300">
-                  <automation.icon className="w-5 h-5 text-synth-blue-light" />
+                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mb-4 group-hover:bg-primary/30 transition-colors duration-300">
+                  <automation.icon className="w-5 h-5 text-primary" />
                 </div>
                 
-                <h3 className="text-base font-semibold text-primary-foreground mb-2 group-hover:text-synth-blue-light transition-colors duration-300">
+                <h3 className="text-base font-semibold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">
                   {automation.title}
                 </h3>
                 
-                <p className="text-sm text-white/60 leading-relaxed">
+                <p className="text-sm text-white/50 leading-relaxed">
                   {automation.description}
                 </p>
               </motion.div>

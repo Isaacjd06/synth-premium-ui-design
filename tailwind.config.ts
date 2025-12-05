@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['DM Sans', 'sans-serif'],
-        display: ['Instrument Serif', 'serif'],
+        sans: ['Inter', 'sans-serif'],
+        display: ['Inter', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -57,8 +57,8 @@ export default {
           "blue-glow": "hsl(var(--synth-blue-glow))",
           navy: "hsl(var(--synth-navy))",
           slate: "hsl(var(--synth-slate))",
-          mist: "hsl(var(--synth-mist))",
-          cloud: "hsl(var(--synth-cloud))",
+          surface: "hsl(var(--synth-surface))",
+          "surface-light": "hsl(var(--synth-surface-light))",
         },
       },
       borderRadius: {
