@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 
 const FooterSection = () => {
   return (
@@ -18,7 +18,7 @@ const FooterSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="flex items-center gap-3 mb-8"
+            className="flex items-center gap-3 mb-6"
           >
             <motion.div 
               className="w-10 h-10 rounded-xl glass-node flex items-center justify-center icon-node"
@@ -36,10 +36,34 @@ const FooterSection = () => {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="text-sm text-foreground/45 mb-4"
+            className="text-sm text-foreground/45 mb-6"
           >
             The thinking automation engine.
           </motion.p>
+
+          {/* Join Waitlist Button */}
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            className="group relative px-6 py-3 bg-primary text-primary-foreground font-accent text-sm rounded-xl overflow-hidden btn-system mb-8"
+            style={{
+              boxShadow: "0 0 25px hsl(217 100% 60% / 0.25), 0 4px 16px -4px hsl(217 100% 50% / 0.3)",
+            }}
+          >
+            <span className="relative z-10 flex items-center gap-2">
+              Join the Waitlist
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </span>
+            <motion.div 
+              className="absolute inset-0 bg-gradient-to-r from-primary via-synth-blue-light to-primary bg-[length:200%_100%]"
+              animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+            />
+          </motion.button>
 
           {/* Copyright */}
           <motion.p
