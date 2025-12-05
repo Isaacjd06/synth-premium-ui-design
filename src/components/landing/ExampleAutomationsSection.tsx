@@ -76,7 +76,7 @@ const ExampleAutomationsSection = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section ref={ref} className="py-40 md:py-52 relative overflow-hidden">
+    <section ref={ref} className="py-24 md:py-32 relative overflow-hidden">
       {/* Background with alternating gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-synth-navy/40 to-transparent" />
       

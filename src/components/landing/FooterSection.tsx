@@ -3,7 +3,7 @@ import { Sparkles } from "lucide-react";
 
 const FooterSection = () => {
   return (
-    <footer className="py-20 relative overflow-hidden">
+    <footer className="py-14 relative overflow-hidden">
       {/* Seamless gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-synth-navy/50" />
       
