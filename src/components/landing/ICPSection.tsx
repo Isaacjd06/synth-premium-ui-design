@@ -1,23 +1,29 @@
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
-import { Briefcase, Code2, BarChart3 } from "lucide-react";
+import { Briefcase, Code2, BarChart3, CheckCircle2 } from "lucide-react";
 
 const personas = [
   {
     icon: Briefcase,
     title: "Operations Teams",
-    description: "Streamline complex processes across departments without writing a single line of code. Perfect for scaling operations efficiently.",
+    subtitle: "Reliability & System Clarity",
+    description: "Eliminate manual errors and gain full visibility into processes. Synth builds reliable systems that scale across departments.",
+    benefits: ["Error reduction", "Process visibility", "Cross-team sync"],
   },
   {
     icon: Code2,
     title: "Product Builders",
-    description: "Focus on building great products while Synth handles the repetitive tasks. Integrate with your existing tools in seconds.",
+    subtitle: "Zero Cognitive Load",
+    description: "Abstract away complexity. Focus on building products while Synth handles the repetitive infrastructure work automatically.",
+    benefits: ["No-code automation", "Instant integrations", "Background tasks"],
   },
   {
     icon: BarChart3,
     title: "Growth Leaders",
-    description: "Automate your growth experiments and scale what works. From lead nurturing to customer success, let data drive your decisions.",
+    subtitle: "Real-Time Execution",
+    description: "Automate experiments, nurture leads, and execute workflows in real-time. Let data drive decisions, automatically.",
+    benefits: ["Automated follow-ups", "Live insights", "Scaled experiments"],
   },
 ];
 
@@ -26,90 +32,107 @@ const ICPSection = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section ref={ref} className="py-36 md:py-48 relative overflow-hidden">
-      {/* Seamless background */}
+    <section ref={ref} className="py-40 md:py-52 relative overflow-hidden">
+      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background to-transparent" />
       
-      {/* Vertical data flow lines */}
+      {/* Data flow lines */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
-          className="absolute top-0 left-[28%] w-px h-full bg-gradient-to-b from-transparent via-primary/15 to-transparent"
-          animate={{ opacity: [0.15, 0.4, 0.15] }}
-          transition={{ duration: 5, repeat: Infinity }}
+          className="absolute top-0 left-[30%] w-px h-full"
+          style={{
+            background: "linear-gradient(180deg, transparent, hsl(217 100% 60% / 0.12), transparent)",
+          }}
+          animate={{ opacity: [0.1, 0.3, 0.1] }}
+          transition={{ duration: 6, repeat: Infinity }}
         />
         <motion.div
-          className="absolute top-0 right-[35%] w-px h-full bg-gradient-to-b from-transparent via-primary/10 to-transparent"
-          animate={{ opacity: [0.25, 0.5, 0.25] }}
-          transition={{ duration: 6, repeat: Infinity, delay: 1 }}
+          className="absolute top-0 right-[38%] w-px h-full"
+          style={{
+            background: "linear-gradient(180deg, transparent, hsl(217 100% 60% / 0.08), transparent)",
+          }}
+          animate={{ opacity: [0.2, 0.4, 0.2] }}
+          transition={{ duration: 8, repeat: Infinity, delay: 1 }}
         />
       </div>
       
       <div className="container px-6 relative z-10">
         <div className="text-center mb-20 md:mb-24">
           <motion.span
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="inline-block text-sm font-accent text-primary uppercase tracking-widest mb-5"
+            className="inline-block text-sm font-accent text-primary uppercase tracking-widest mb-6"
           >
-            Who It's For
+            Use Cases
           </motion.span>
 
           <motion.h2
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 25 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.7, delay: 0.1 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-display-bold tracking-tight max-w-2xl mx-auto"
           >
             Designed for <span className="text-gradient">ambitious</span> teams
           </motion.h2>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 lg:gap-10 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
           {personas.map((persona, index) => (
             <motion.div
               key={persona.title}
-              initial={{ opacity: 0, y: 60 }}
+              initial={{ opacity: 0, y: 50 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.2 + index * 0.15 }}
+              transition={{ duration: 0.7, delay: 0.2 + index * 0.15 }}
             >
               <motion.div
-                whileHover={{ y: -8 }}
+                whileHover={{ y: -6 }}
                 transition={{ duration: 0.4 }}
                 className="group relative h-full"
               >
-                {/* Glow effect on hover */}
+                {/* Glow backdrop */}
                 <motion.div 
-                  className="absolute -inset-1 rounded-[2rem] bg-gradient-to-r from-primary/15 via-synth-blue-light/10 to-primary/15 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500"
+                  className="absolute -inset-1 rounded-2xl bg-gradient-to-b from-primary/10 to-primary/5 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500"
                 />
                 
-                <div className="relative h-full p-8 lg:p-10 rounded-3xl card-premium">
-                  {/* Icon with bounce/glow */}
+                <div className="relative h-full p-8 lg:p-9 rounded-2xl card-node flow-border">
+                  {/* Icon with subtle animation */}
                   <motion.div 
-                    className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-7 transition-all duration-300 group-hover:bg-primary/20 group-hover:border-primary/40 icon-glow"
-                    whileHover={{ scale: 1.08, rotate: 3 }}
-                    animate={isInView ? { 
-                      y: [0, -3, 0],
-                    } : {}}
-                    transition={{ 
-                      y: { duration: 3, repeat: Infinity, delay: index * 0.5 },
-                    }}
+                    className="w-14 h-14 rounded-xl bg-primary/8 border border-primary/15 flex items-center justify-center mb-6 transition-all duration-400 group-hover:bg-primary/15 group-hover:border-primary/30 icon-node"
+                    whileHover={{ scale: 1.05 }}
+                    animate={isInView ? { y: [0, -3, 0] } : {}}
+                    transition={{ y: { duration: 4, repeat: Infinity, delay: index * 0.5 } }}
                   >
-                    <persona.icon className="w-7 h-7 text-primary" />
+                    <persona.icon className="w-6 h-6 text-primary" />
                   </motion.div>
                   
-                  <h3 className="text-2xl font-display font-semibold mb-4 text-foreground group-hover:text-primary transition-colors duration-300">
+                  <h3 className="text-xl font-display font-semibold mb-1 text-foreground group-hover:text-primary transition-colors duration-300">
                     {persona.title}
                   </h3>
                   
-                  <p className="text-foreground/70 leading-relaxed">
+                  <p className="text-sm font-accent text-primary/70 mb-4">
+                    {persona.subtitle}
+                  </p>
+                  
+                  <p className="text-foreground/60 leading-relaxed mb-6">
                     {persona.description}
                   </p>
                   
-                  {/* Bottom accent line */}
-                  <motion.div 
-                    className="absolute bottom-0 left-10 right-10 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  />
+                  {/* Benefit indicators */}
+                  <div className="space-y-2">
+                    {persona.benefits.map((benefit, i) => (
+                      <motion.div
+                        key={benefit}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={isInView ? { opacity: 1, x: 0 } : {}}
+                        transition={{ duration: 0.4, delay: 0.5 + index * 0.15 + i * 0.1 }}
+                        className="flex items-center gap-2 text-sm text-foreground/55"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5 text-primary/60" />
+                        <span>{benefit}</span>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
             </motion.div>
