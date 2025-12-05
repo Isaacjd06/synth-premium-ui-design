@@ -29,9 +29,22 @@ const HowItWorksSection = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section ref={ref} id="how-it-works" className="py-32 md:py-40 relative overflow-hidden bg-background">
-      {/* Decorative background */}
-      <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+    <section ref={ref} id="how-it-works" className="py-32 md:py-40 relative overflow-hidden">
+      {/* Seamless background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-synth-surface/20 to-background" />
+      
+      {/* Animated connection line */}
+      <motion.div
+        className="absolute top-1/2 left-0 right-0 h-px"
+        initial={{ opacity: 0 }}
+        animate={isInView ? { opacity: 1 } : {}}
+      >
+        <motion.div
+          className="h-full bg-gradient-to-r from-transparent via-primary/30 to-transparent"
+          animate={{ opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 3, repeat: Infinity }}
+        />
+      </motion.div>
       
       <div className="container px-6 relative z-10">
         <div className="text-center mb-16 md:mb-24">
@@ -48,7 +61,7 @@ const HowItWorksSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-display"
+            className="text-4xl md:text-5xl lg:text-6xl font-display font-bold"
           >
             Three steps to <span className="text-gradient">automation bliss</span>
           </motion.h2>
@@ -62,7 +75,17 @@ const HowItWorksSection = () => {
                 initial={{ scaleX: 0 }}
                 animate={isInView ? { scaleX: 1 } : {}}
                 transition={{ duration: 1, delay: 0.5 }}
-                className="h-full bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30 origin-left"
+                className="h-full origin-left"
+                style={{
+                  background: "linear-gradient(90deg, hsl(var(--primary)/0.3), hsl(var(--primary)/0.5), hsl(var(--primary)/0.3))",
+                }}
+              />
+              {/* Animated dot traveling along line */}
+              <motion.div
+                className="absolute top-1/2 w-3 h-3 rounded-full bg-primary -translate-y-1/2"
+                animate={{ left: ["0%", "100%", "0%"] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                style={{ boxShadow: "0 0 10px hsl(var(--primary)), 0 0 20px hsl(var(--primary)/0.5)" }}
               />
             </div>
 
@@ -83,13 +106,23 @@ const HowItWorksSection = () => {
                   <div className="relative inline-block mb-8">
                     <motion.div
                       whileHover={{ scale: 1.1, rotate: 5 }}
-                      className="w-20 h-20 rounded-3xl bg-card-gradient shadow-card flex items-center justify-center relative z-10 border border-border group-hover:shadow-glow transition-shadow duration-500"
+                      className="w-20 h-20 rounded-3xl bg-card/50 backdrop-blur-md flex items-center justify-center relative z-10 border border-primary/20 group-hover:border-primary/50 transition-all duration-500"
+                      style={{
+                        boxShadow: "0 0 30px hsl(var(--primary)/0.1)",
+                      }}
                     >
                       <step.icon className="w-8 h-8 text-primary" />
                     </motion.div>
-                    <span className="absolute -top-3 -right-3 text-5xl font-display text-primary/30 font-bold">
+                    <motion.span 
+                      className="absolute -top-3 -right-3 text-5xl font-display font-bold"
+                      style={{
+                        background: "linear-gradient(180deg, hsl(var(--primary)/0.4), hsl(var(--primary)/0.1))",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                      }}
+                    >
                       {step.number}
-                    </span>
+                    </motion.span>
                   </div>
 
                   <h3 className="text-xl md:text-2xl font-semibold mb-4 text-foreground group-hover:text-primary transition-colors duration-300">
