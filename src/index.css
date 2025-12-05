@@ -1,64 +1,62 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Instrument+Serif:ital@0;1&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Synth Design System - Premium SaaS */
-    --background: 220 30% 98%;
-    --foreground: 213 50% 10%;
+    /* Synth Design System - Dark Premium Theme */
+    --background: 220 20% 7%;
+    --foreground: 210 20% 95%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 213 50% 10%;
+    --card: 220 20% 10%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 213 50% 10%;
+    --popover: 220 20% 10%;
+    --popover-foreground: 210 20% 95%;
 
-    /* Primary: Deep Blue #194c92 */
-    --primary: 213 70% 33%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary: Bright Blue accent */
+    --primary: 213 90% 55%;
+    --primary-foreground: 220 20% 7%;
 
-    /* Lighter blue for secondary */
-    --secondary: 213 40% 95%;
-    --secondary-foreground: 213 70% 33%;
+    /* Secondary - subtle dark surface */
+    --secondary: 220 20% 14%;
+    --secondary-foreground: 210 20% 90%;
 
-    --muted: 220 20% 94%;
-    --muted-foreground: 213 20% 45%;
+    --muted: 220 15% 18%;
+    --muted-foreground: 215 15% 55%;
 
-    --accent: 213 60% 90%;
-    --accent-foreground: 213 70% 25%;
+    --accent: 213 50% 20%;
+    --accent-foreground: 213 90% 70%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 213 30% 88%;
-    --input: 213 30% 88%;
-    --ring: 213 70% 33%;
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 213 90% 55%;
 
     --radius: 0.75rem;
 
-    /* Synth Custom Tokens */
-    --synth-blue: 213 70% 33%;
-    --synth-blue-light: 213 60% 50%;
-    --synth-blue-glow: 213 80% 60%;
-    --synth-navy: 213 50% 12%;
-    --synth-slate: 213 20% 40%;
-    --synth-mist: 220 30% 96%;
-    --synth-cloud: 220 40% 99%;
+    /* Synth Custom Tokens - Dark Theme */
+    --synth-blue: 213 90% 55%;
+    --synth-blue-light: 213 85% 65%;
+    --synth-blue-glow: 213 100% 70%;
+    --synth-navy: 220 25% 5%;
+    --synth-slate: 215 15% 45%;
+    --synth-surface: 220 20% 12%;
+    --synth-surface-light: 220 18% 16%;
 
-    /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(220 30% 98%) 0%, hsl(213 40% 95%) 50%, hsl(213 50% 92%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(213 30% 98%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsl(213 80% 60% / 0.15) 0%, transparent 70%);
-    --gradient-text: linear-gradient(135deg, hsl(213 70% 33%) 0%, hsl(213 60% 50%) 100%);
+    /* Gradients - Dark Theme */
+    --gradient-hero: linear-gradient(135deg, hsl(220 20% 7%) 0%, hsl(220 25% 10%) 50%, hsl(220 20% 7%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(220 20% 12%) 0%, hsl(220 20% 10%) 100%);
+    --gradient-glow: radial-gradient(ellipse at center, hsl(213 100% 60% / 0.12) 0%, transparent 70%);
+    --gradient-text: linear-gradient(135deg, hsl(213 90% 60%) 0%, hsl(213 85% 75%) 100%);
 
-    /* Shadows */
-    --shadow-soft: 0 4px 20px -4px hsl(213 50% 20% / 0.08);
-    --shadow-card: 0 8px 40px -8px hsl(213 50% 20% / 0.1);
-    --shadow-glow: 0 0 60px -15px hsl(213 80% 60% / 0.4);
-    --shadow-button: 0 4px 14px -4px hsl(213 70% 33% / 0.4);
+    /* Shadows - Dark Theme */
+    --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.4);
+    --shadow-card: 0 8px 40px -8px hsl(0 0% 0% / 0.5);
+    --shadow-glow: 0 0 60px -15px hsl(213 100% 60% / 0.35);
+    --shadow-button: 0 4px 20px -4px hsl(213 100% 50% / 0.4);
   }
 }
 
@@ -73,17 +71,18 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
   }
 }
 
 @layer utilities {
   .font-display {
-    font-family: 'Instrument Serif', serif;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
   }
 
   .font-sans {
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
   }
 
   .text-gradient {
@@ -121,16 +120,16 @@
     box-shadow: var(--shadow-button);
   }
 
-  /* Glassmorphism */
+  /* Glassmorphism - Dark Theme */
   .glass {
-    background: hsl(0 0% 100% / 0.7);
+    background: hsl(220 20% 10% / 0.7);
     backdrop-filter: blur(20px);
-    border: 1px solid hsl(213 30% 88% / 0.5);
+    border: 1px solid hsl(220 15% 25% / 0.5);
   }
 
   .glass-strong {
-    background: hsl(0 0% 100% / 0.85);
+    background: hsl(220 20% 12% / 0.85);
     backdrop-filter: blur(30px);
-    border: 1px solid hsl(213 30% 88% / 0.6);
+    border: 1px solid hsl(220 15% 25% / 0.6);
   }
 }

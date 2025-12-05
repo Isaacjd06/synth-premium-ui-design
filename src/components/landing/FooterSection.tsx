@@ -7,7 +7,7 @@ const FooterSection = () => {
   const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
-    <footer ref={ref} className="py-16 border-t border-border/50 bg-synth-cloud">
+    <footer ref={ref} className="py-16 border-t border-border bg-synth-navy">
       <div className="container px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -17,7 +17,7 @@ const FooterSection = () => {
         >
           {/* Logo */}
           <div className="mb-6">
-            <span className="text-3xl font-display italic text-gradient">
+            <span className="text-3xl font-display font-bold text-gradient">
               Synth
             </span>
           </div>

@@ -29,7 +29,7 @@ const HowItWorksSection = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section ref={ref} id="how-it-works" className="py-32 md:py-40 relative overflow-hidden">
+    <section ref={ref} id="how-it-works" className="py-32 md:py-40 relative overflow-hidden bg-background">
       {/* Decorative background */}
       <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-border to-transparent" />
       
@@ -39,7 +39,7 @@ const HowItWorksSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="inline-block text-sm font-medium text-primary uppercase tracking-wider mb-4"
+            className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-4"
           >
             How It Works
           </motion.span>
@@ -50,7 +50,7 @@ const HowItWorksSection = () => {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-display"
           >
-            Three steps to <span className="text-gradient italic">automation bliss</span>
+            Three steps to <span className="text-gradient">automation bliss</span>
           </motion.h2>
         </div>
 
@@ -62,7 +62,7 @@ const HowItWorksSection = () => {
                 initial={{ scaleX: 0 }}
                 animate={isInView ? { scaleX: 1 } : {}}
                 transition={{ duration: 1, delay: 0.5 }}
-                className="h-full bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20 origin-left"
+                className="h-full bg-gradient-to-r from-primary/30 via-primary/50 to-primary/30 origin-left"
               />
             </div>
 
@@ -83,11 +83,11 @@ const HowItWorksSection = () => {
                   <div className="relative inline-block mb-8">
                     <motion.div
                       whileHover={{ scale: 1.1, rotate: 5 }}
-                      className="w-20 h-20 rounded-3xl bg-card-gradient shadow-card flex items-center justify-center relative z-10 border border-border/50 group-hover:shadow-glow transition-shadow duration-500"
+                      className="w-20 h-20 rounded-3xl bg-card-gradient shadow-card flex items-center justify-center relative z-10 border border-border group-hover:shadow-glow transition-shadow duration-500"
                     >
                       <step.icon className="w-8 h-8 text-primary" />
                     </motion.div>
-                    <span className="absolute -top-3 -right-3 text-5xl font-display text-primary/10 font-light">
+                    <span className="absolute -top-3 -right-3 text-5xl font-display text-primary/20 font-bold">
                       {step.number}
                     </span>
                   </div>
