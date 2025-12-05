@@ -72,7 +72,7 @@ const HeroSection = () => {
       {/* Computation grid */}
       <div className="absolute inset-0 grid-computation opacity-40" />
 
-      <div className="container relative z-10 px-6 py-20 md:py-28">
+      <div className="container relative z-10 px-6 py-16 md:py-20">
         <div className="max-w-4xl mx-auto text-center">
           {/* System badge */}
           <motion.div

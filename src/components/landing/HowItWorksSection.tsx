@@ -32,12 +32,12 @@ const HowItWorksSection = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section ref={ref} id="how-it-works" className="py-24 md:py-32 relative overflow-hidden">
+    <section ref={ref} id="how-it-works" className="py-16 md:py-20 relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-synth-surface/20 to-background" />
       
       <div className="container px-6 relative z-10">
-        <div className="text-center mb-20 md:mb-28">
+        <div className="text-center mb-12 md:mb-16">
           <motion.span
             initial={{ opacity: 0, y: 15 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
