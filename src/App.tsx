@@ -23,34 +23,36 @@ import Billing from "./pages/Billing";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter>
-        <Toaster />
-        <Sonner />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/waitlist" element={<Waitlist />} />
-          <Route path="/waitlist/confirmed" element={<WaitlistConfirmed />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/app/dashboard" element={<Dashboard />} />
-          <Route path="/app/chat" element={<Chat />} />
-          <Route path="/app/workflows" element={<Workflows />} />
-          <Route path="/app/workflows/create" element={<CreateWorkflow />} />
-          <Route path="/app/workflows/:id" element={<WorkflowDetail />} />
-          <Route path="/app/executions" element={<Executions />} />
-          <Route path="/app/knowledge" element={<Knowledge />} />
-          <Route path="/app/connections" element={<Connections />} />
-          <Route path="/app/memory" element={<Memory />} />
-          <Route path="/app/settings" element={<Settings />} />
-          <Route path="/app/billing" element={<Billing />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/waitlist" element={<Waitlist />} />
+            <Route path="/waitlist/confirmed" element={<WaitlistConfirmed />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/app/dashboard" element={<Dashboard />} />
+            <Route path="/app/chat" element={<Chat />} />
+            <Route path="/app/workflows" element={<Workflows />} />
+            <Route path="/app/workflows/create" element={<CreateWorkflow />} />
+            <Route path="/app/workflows/:id" element={<WorkflowDetail />} />
+            <Route path="/app/executions" element={<Executions />} />
+            <Route path="/app/knowledge" element={<Knowledge />} />
+            <Route path="/app/connections" element={<Connections />} />
+            <Route path="/app/memory" element={<Memory />} />
+            <Route path="/app/settings" element={<Settings />} />
+            <Route path="/app/billing" element={<Billing />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
