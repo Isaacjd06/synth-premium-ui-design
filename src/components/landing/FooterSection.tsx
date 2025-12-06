@@ -50,24 +50,26 @@ const FooterSection = () => {
             className="flex flex-col sm:flex-row items-center gap-4 mb-8"
           >
             {/* Join Waitlist Button */}
-            <motion.button
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              className="group relative px-6 py-3 bg-primary text-primary-foreground font-accent text-sm rounded-xl overflow-hidden btn-system"
-              style={{
-                boxShadow: "0 0 25px hsl(217 100% 60% / 0.25), 0 4px 16px -4px hsl(217 100% 50% / 0.3)",
-              }}
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                Join the Waitlist
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </span>
-              <motion.div 
-                className="absolute inset-0 bg-gradient-to-r from-primary via-synth-blue-light to-primary bg-[length:200%_100%]"
-                animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-              />
-            </motion.button>
+            <Link to="/waitlist">
+              <motion.button
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="group relative px-6 py-3 bg-primary text-primary-foreground font-accent text-sm rounded-xl overflow-hidden btn-system"
+                style={{
+                  boxShadow: "0 0 25px hsl(217 100% 60% / 0.25), 0 4px 16px -4px hsl(217 100% 50% / 0.3)",
+                }}
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  Join the Waitlist
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </span>
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-r from-primary via-synth-blue-light to-primary bg-[length:200%_100%]"
+                  animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+                />
+              </motion.button>
+            </Link>
 
             {/* View Pricing Button */}
             <Link to="/pricing">
