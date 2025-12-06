@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { ArrowRight, Sparkles, Cpu, GitBranch, Workflow, Zap } from "lucide-react";
 
 const HeroSection = () => {
@@ -129,24 +130,26 @@ const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.8 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-5"
           >
-            <motion.button
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              className="group relative px-8 py-4 bg-primary text-primary-foreground font-accent rounded-xl overflow-hidden btn-system"
-              style={{
-                boxShadow: "0 0 30px hsl(217 100% 60% / 0.3), 0 6px 24px -6px hsl(217 100% 50% / 0.35)",
-              }}
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                Join the Waitlist
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </span>
-              <motion.div 
-                className="absolute inset-0 bg-gradient-to-r from-primary via-synth-blue-light to-primary bg-[length:200%_100%]"
-                animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-              />
-            </motion.button>
+            <Link to="/waitlist">
+              <motion.button
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="group relative px-8 py-4 bg-primary text-primary-foreground font-accent rounded-xl overflow-hidden btn-system"
+                style={{
+                  boxShadow: "0 0 30px hsl(217 100% 60% / 0.3), 0 6px 24px -6px hsl(217 100% 50% / 0.35)",
+                }}
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  Join the Waitlist
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </span>
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-r from-primary via-synth-blue-light to-primary bg-[length:200%_100%]"
+                  animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+                />
+              </motion.button>
+            </Link>
 
             <motion.a
               href="#how-it-works"
