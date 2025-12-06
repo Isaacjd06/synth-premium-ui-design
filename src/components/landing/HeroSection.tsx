@@ -151,14 +151,18 @@ const HeroSection = () => {
               </motion.button>
             </Link>
 
-            <motion.a
-              href="#how-it-works"
-              whileHover={{ x: 4 }}
-              className="flex items-center gap-2 text-foreground/65 hover:text-primary transition-all duration-300 font-medium group"
-            >
-              <span>See how Synth works</span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </motion.a>
+            <Link to="/app/dashboard">
+              <motion.button
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-8 py-4 border border-border bg-background/50 text-foreground font-accent rounded-xl hover:bg-muted/50 transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  Open App
+                  <ArrowRight className="w-4 h-4" />
+                </span>
+              </motion.button>
+            </Link>
           </motion.div>
         </div>
       </div>
