@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Lightbulb, X, BookOpen, Link2, AlertTriangle, 
@@ -51,6 +52,7 @@ const mockSuggestions: Suggestion[] = [
 ];
 
 const KnowledgeSuggestions = () => {
+  const navigate = useNavigate();
   const [suggestions, setSuggestions] = useState(mockSuggestions);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -161,7 +163,7 @@ const KnowledgeSuggestions = () => {
                         className="w-full text-xs"
                         onClick={() => {
                           if (suggestion.actionLink) {
-                            window.location.href = suggestion.actionLink;
+                            navigate(suggestion.actionLink);
                           }
                         }}
                       >
