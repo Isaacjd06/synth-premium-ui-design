@@ -14,6 +14,8 @@ import CreateWorkflow from "./pages/app/CreateWorkflow";
 import WorkflowDetail from "./pages/app/WorkflowDetail";
 import Executions from "./pages/app/Executions";
 import Knowledge from "./pages/app/Knowledge";
+import Connections from "./pages/app/Connections";
+import Memory from "./pages/app/Memory";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +36,8 @@ const App = () => (
           <Route path="/app/workflows/:id" element={<WorkflowDetail />} />
           <Route path="/app/executions" element={<Executions />} />
           <Route path="/app/knowledge" element={<Knowledge />} />
+          <Route path="/app/connections" element={<Connections />} />
+          <Route path="/app/memory" element={<Memory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
