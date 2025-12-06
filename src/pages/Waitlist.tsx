@@ -26,7 +26,7 @@ const Waitlist = () => {
     });
     
     setIsSubmitting(false);
-    navigate("/waitlist/confirmed");
+    navigate("/");
   };
 
   return (
