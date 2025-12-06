@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Sparkles, ArrowRight } from "lucide-react";
-
 const FooterSection = () => {
   return (
     <footer className="py-10 relative overflow-hidden">
@@ -41,29 +41,45 @@ const FooterSection = () => {
             The thinking automation engine.
           </motion.p>
 
-          {/* Join Waitlist Button */}
-          <motion.button
+          {/* Buttons */}
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className="group relative px-6 py-3 bg-primary text-primary-foreground font-accent text-sm rounded-xl overflow-hidden btn-system mb-8"
-            style={{
-              boxShadow: "0 0 25px hsl(217 100% 60% / 0.25), 0 4px 16px -4px hsl(217 100% 50% / 0.3)",
-            }}
+            className="flex flex-col sm:flex-row items-center gap-4 mb-8"
           >
-            <span className="relative z-10 flex items-center gap-2">
-              Join the Waitlist
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </span>
-            <motion.div 
-              className="absolute inset-0 bg-gradient-to-r from-primary via-synth-blue-light to-primary bg-[length:200%_100%]"
-              animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-            />
-          </motion.button>
+            {/* Join Waitlist Button */}
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="group relative px-6 py-3 bg-primary text-primary-foreground font-accent text-sm rounded-xl overflow-hidden btn-system"
+              style={{
+                boxShadow: "0 0 25px hsl(217 100% 60% / 0.25), 0 4px 16px -4px hsl(217 100% 50% / 0.3)",
+              }}
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                Join the Waitlist
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </span>
+              <motion.div 
+                className="absolute inset-0 bg-gradient-to-r from-primary via-synth-blue-light to-primary bg-[length:200%_100%]"
+                animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+              />
+            </motion.button>
+
+            {/* View Pricing Button */}
+            <Link to="/pricing">
+              <motion.button
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-6 py-3 font-accent text-sm rounded-xl border border-border/50 text-foreground/70 hover:text-foreground hover:border-primary/50 hover:bg-primary/5 transition-all"
+              >
+                View Pricing
+              </motion.button>
+            </Link>
+          </motion.div>
 
           {/* Copyright */}
           <motion.p
