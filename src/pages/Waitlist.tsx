@@ -4,12 +4,10 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Send, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const Waitlist = () => {
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -28,7 +26,7 @@ const Waitlist = () => {
     });
     
     setIsSubmitting(false);
-    navigate("/waitlist/confirmed");
+    navigate("/");
   };
 
   return (
@@ -49,31 +47,15 @@ const Waitlist = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name (optional)</Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="h-12 text-base"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="h-12 text-base"
-              autoFocus
-            />
-          </div>
+          <Input
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="h-12 text-base"
+            autoFocus
+          />
           
           <Button 
             type="submit" 

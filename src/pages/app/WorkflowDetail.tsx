@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronDown, ChevronUp, Play, Zap, Trash2, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Play, Zap, Trash2, Loader2, Copy, Check } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import AppCard from "@/components/app/AppCard";
 import StatusBadge from "@/components/app/StatusBadge";
@@ -19,6 +19,7 @@ const mockWorkflow = {
   name: "Send Welcome Email",
   description: "Automatically sends a welcome email when a new user signs up to the platform.",
   status: "inactive",
+  n8n_workflow_id: "pd_wf_abc123xyz",
   created_at: "2025-01-10T10:00:00Z",
   updated_at: "2025-01-15T14:30:00Z",
   trigger: { type: "webhook", config: { path: "/new-user", method: "POST" } },
@@ -82,13 +83,26 @@ const WorkflowDetail = () => {
     status: string;
   } | null>(null);
 
+  // Copy state
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyId = () => {
+    if (workflow.n8n_workflow_id) {
+      navigator.clipboard.writeText(workflow.n8n_workflow_id);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   const handleActivate = async () => {
     setIsActivating(true);
     await new Promise(r => setTimeout(r, 1500));
     
-    setWorkflow({ ...workflow, status: "active" });
+    setWorkflow({ ...workflow, status: "active", n8n_workflow_id: "pd_wf_" + crypto.randomUUID().slice(0, 8) });
     setIsActivating(false);
-    toast.success("Workflow activated successfully");
+    toast.success("Workflow activated successfully", {
+      description: `Pipedream Workflow ID: ${workflow.n8n_workflow_id}`
+    });
   };
 
   const handleOpenRunDialog = () => {
@@ -197,6 +211,20 @@ const WorkflowDetail = () => {
           </div>
         </div>
 
+        {/* Pipedream ID */}
+        {workflow.n8n_workflow_id && (
+          <AppCard className="mb-6 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Pipedream Workflow ID</p>
+                <p className="font-mono text-sm text-foreground">{workflow.n8n_workflow_id}</p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={handleCopyId}>
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </Button>
+            </div>
+          </AppCard>
+        )}
 
         {/* Metadata */}
         <AppCard className="mb-6">
