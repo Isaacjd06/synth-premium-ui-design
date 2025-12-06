@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { Shield, ArrowRight } from "lucide-react";
+import { Shield, ArrowRight, LayoutDashboard } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const PricingCTA = () => {
@@ -56,6 +57,28 @@ const PricingCTA = () => {
             </Button>
           </div>
 
+          {/* Open Dashboard Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mb-10"
+          >
+            <Button
+              asChild
+              variant="secondary"
+              size="lg"
+              className="group px-8 py-6 text-base font-accent rounded-xl hover:bg-secondary/80"
+            >
+              <Link to="/app/dashboard" className="flex items-center gap-2">
+                <LayoutDashboard className="w-5 h-5" />
+                Open Dashboard
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Button>
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -63,7 +86,7 @@ const PricingCTA = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20"
           >
-            <Shield className="w-4 h-4 text-accent" />
+            <Shield className="w-4 h-4 text-accent-foreground" />
             <span className="text-sm text-foreground/70">
               14-Day No-Risk Guarantee — full refund if Synth doesn't create meaningful time savings.
             </span>
