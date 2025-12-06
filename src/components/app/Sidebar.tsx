@@ -12,6 +12,7 @@ import {
   X,
   Link2,
   Brain,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ const navItems = [
   { title: "Connections", href: "/app/connections", icon: Link2 },
   { title: "Memory", href: "/app/memory", icon: Brain },
   { title: "Knowledge", href: "/app/knowledge", icon: BookOpen },
+  { title: "Settings", href: "/app/settings", icon: Settings },
 ];
 
 const Sidebar = () => {
