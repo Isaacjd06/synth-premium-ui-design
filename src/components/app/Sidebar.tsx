@@ -20,7 +20,7 @@ const navItems = [
   { title: "Workflows", href: "/app/workflows", icon: Workflow },
   { title: "Create Workflow", href: "/app/workflows/create", icon: PlusCircle },
   { title: "Executions", href: "/app/executions", icon: PlaySquare },
-  { title: "Knowledgebase", href: "/app/knowledgebase", icon: BookOpen, disabled: true, badge: "Soon" },
+  { title: "Knowledge", href: "/app/knowledge", icon: BookOpen },
 ];
 
 const Sidebar = () => {
@@ -39,28 +39,33 @@ const Sidebar = () => {
 
   const NavContent = () => (
     <nav className="flex flex-col gap-1 p-4">
-      {navItems.map((item) => (
-        <Link
-          key={item.href}
-          to={item.disabled ? "#" : item.href}
-          onClick={() => !item.disabled && setIsOpen(false)}
-          className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-            isActive(item.href) && !item.disabled
-              ? "bg-primary text-primary-foreground shadow-lg"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            item.disabled && "opacity-50 cursor-not-allowed"
-          )}
-        >
-          <item.icon className="w-4 h-4" />
-          <span>{item.title}</span>
-          {item.badge && (
-            <Badge variant="secondary" className="ml-auto text-xs">
-              {item.badge}
-            </Badge>
-          )}
-        </Link>
-      ))}
+      {navItems.map((item) => {
+        const isDisabled = 'disabled' in item && item.disabled;
+        const badge = 'badge' in item ? (item.badge as string) : undefined;
+        
+        return (
+          <Link
+            key={item.href}
+            to={isDisabled ? "#" : item.href}
+            onClick={() => !isDisabled && setIsOpen(false)}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+              isActive(item.href) && !isDisabled
+                ? "bg-primary text-primary-foreground shadow-lg"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              isDisabled && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            <item.icon className="w-4 h-4" />
+            <span>{item.title}</span>
+            {badge && (
+              <Badge variant="secondary" className="ml-auto text-xs">
+                {badge}
+              </Badge>
+            )}
+          </Link>
+        );
+      })}
     </nav>
   );
 
