@@ -4,40 +4,26 @@
 
 @layer base {
   :root {
-    /* Synth Design System - Computation Surface Theme */
     --background: 222 47% 3%;
     --foreground: 210 20% 98%;
-
     --card: 222 42% 6%;
     --card-foreground: 210 20% 98%;
-
     --popover: 222 42% 6%;
     --popover-foreground: 210 20% 98%;
-
-    /* Primary: Intelligence Blue */
     --primary: 217 91% 60%;
     --primary-foreground: 222 47% 3%;
-
-    /* Secondary - system surface */
     --secondary: 222 38% 10%;
     --secondary-foreground: 210 20% 93%;
-
     --muted: 222 32% 12%;
     --muted-foreground: 215 20% 55%;
-
     --accent: 217 55% 16%;
     --accent-foreground: 217 91% 75%;
-
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
-
     --border: 222 28% 12%;
     --input: 222 28% 12%;
     --ring: 217 91% 60%;
-
     --radius: 0.75rem;
-
-    /* Synth Intelligence Tokens */
     --synth-blue: 217 91% 60%;
     --synth-blue-light: 217 90% 72%;
     --synth-blue-glow: 217 100% 78%;
@@ -46,8 +32,6 @@
     --synth-slate: 215 20% 50%;
     --synth-surface: 222 40% 7%;
     --synth-surface-light: 222 38% 11%;
-
-    /* Computation Gradients */
     --gradient-hero: linear-gradient(180deg, hsl(222 55% 2%) 0%, hsl(222 45% 5%) 50%, hsl(222 50% 3%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(222 40% 8%) 0%, hsl(222 42% 5%) 100%);
     --gradient-glow: radial-gradient(ellipse at center, hsl(217 100% 60% / 0.12) 0%, transparent 60%);
@@ -55,8 +39,6 @@
     --gradient-text-accent: linear-gradient(90deg, hsl(217 91% 60%) 0%, hsl(200 100% 72%) 50%, hsl(217 91% 78%) 100%);
     --gradient-spotlight: radial-gradient(ellipse 70% 40% at 50% 0%, hsl(217 100% 60% / 0.15), transparent 70%);
     --gradient-neural: radial-gradient(ellipse at center, hsl(217 100% 60% / 0.08) 0%, transparent 50%);
-
-    /* System Shadows */
     --shadow-soft: 0 4px 24px -4px hsl(0 0% 0% / 0.6);
     --shadow-card: 0 8px 40px -12px hsl(0 0% 0% / 0.7);
     --shadow-glow: 0 0 60px -15px hsl(217 100% 60% / 0.35);
@@ -64,15 +46,9 @@
     --shadow-neon: 0 0 15px hsl(217 100% 60% / 0.35), 0 0 30px hsl(217 100% 60% / 0.15);
     --shadow-node: 0 0 20px hsl(217 100% 60% / 0.2), inset 0 0 20px hsl(217 100% 60% / 0.05);
   }
-}
 
-@layer base {
   * {
     @apply border-border;
-  }
-
-  html {
-    scroll-behavior: smooth;
   }
 
   body {
