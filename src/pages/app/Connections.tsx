@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, Loader2, Check, X, Link2, Key, Globe, Zap } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Check, X, Link2, Key, Globe, Zap, Search } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import AppCard from "@/components/app/AppCard";
 import StatusBadge from "@/components/app/StatusBadge";
-import AvailableServices from "@/components/connections/AvailableServices";
+import ConnectionSearch from "@/components/connections/ConnectionSearch";
+import SuggestedConnections from "@/components/connections/SuggestedConnections";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -129,11 +130,11 @@ const Connections = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="browse" className="w-full">
+        <Tabs defaultValue="search" className="w-full">
           <TabsList className="mb-6">
-            <TabsTrigger value="browse" className="flex items-center gap-2">
-              <Zap className="w-4 h-4" />
-              Browse Services
+            <TabsTrigger value="search" className="flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Search & Connect
             </TabsTrigger>
             <TabsTrigger value="custom" className="flex items-center gap-2">
               <Link2 className="w-4 h-4" />
@@ -141,9 +142,10 @@ const Connections = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* Browse Services Tab */}
-          <TabsContent value="browse">
-            <AvailableServices />
+          {/* Search & Connect Tab */}
+          <TabsContent value="search" className="space-y-8">
+            <SuggestedConnections />
+            <ConnectionSearch />
           </TabsContent>
 
           {/* Custom Connections Tab */}

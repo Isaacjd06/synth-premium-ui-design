@@ -6,6 +6,7 @@ import BusinessRulesSection from "@/components/knowledge/BusinessRulesSection";
 import GlossarySection from "@/components/knowledge/GlossarySection";
 import FileUploadSection from "@/components/knowledge/FileUploadSection";
 import KnowledgeSuggestions from "@/components/knowledge/KnowledgeSuggestions";
+import KnowledgeList from "@/components/knowledge/KnowledgeList";
 
 const Knowledge = () => {
   return (
@@ -25,14 +26,19 @@ const Knowledge = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main Content */}
           <div className="flex-1 min-w-0">
-            <Tabs defaultValue="structured" className="w-full">
-              <TabsList className="grid w-full grid-cols-5 mb-6">
+            <Tabs defaultValue="knowledge" className="w-full">
+              <TabsList className="grid w-full grid-cols-6 mb-6">
+                <TabsTrigger value="knowledge">Knowledge</TabsTrigger>
                 <TabsTrigger value="structured">Profile</TabsTrigger>
                 <TabsTrigger value="unstructured">Notes</TabsTrigger>
                 <TabsTrigger value="rules">Rules</TabsTrigger>
                 <TabsTrigger value="glossary">Glossary</TabsTrigger>
                 <TabsTrigger value="files">Files</TabsTrigger>
               </TabsList>
+
+              <TabsContent value="knowledge">
+                <KnowledgeList />
+              </TabsContent>
 
               <TabsContent value="structured">
                 <StructuredContextSection />
