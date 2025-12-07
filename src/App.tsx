@@ -19,6 +19,7 @@ import Memory from "./pages/app/Memory";
 import Billing from "./pages/app/Billing";
 import Checkout from "./pages/app/Checkout";
 import Settings from "./pages/app/Settings";
+import ApiKeys from "./pages/app/ApiKeys";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/app/billing" element={<Billing />} />
           <Route path="/app/checkout" element={<Checkout />} />
           <Route path="/app/settings" element={<Settings />} />
+          <Route path="/app/api-keys" element={<ApiKeys />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
