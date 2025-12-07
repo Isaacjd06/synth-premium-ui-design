@@ -96,25 +96,25 @@ const plans = [
 const addons = [
   {
     id: "rapid_booster",
-    name: "Rapid Automation Booster",
+    name: "Rapid Automation Booster Pack",
     description: "Unlock 25,000 additional automation runs instantly",
-    price: 49,
+    price: 97,
   },
   {
     id: "performance_turbo",
     name: "Workflow Performance Turbo",
     description: "Priority execution queue for faster processing",
-    price: 99,
+    price: 147,
   },
   {
     id: "jumpstart",
-    name: "Business Systems Jumpstart",
+    name: "Business Systems Jumpstart Kit",
     description: "Done-for-you workflow setup and optimization",
-    price: 500,
+    price: 199,
   },
   {
     id: "ai_training",
-    name: "AI Persona Training",
+    name: "AI Persona Training Upgrade",
     description: "Custom AI model training for your business context",
     price: 249,
   },
@@ -122,7 +122,7 @@ const addons = [
     id: "knowledge_injection",
     name: "Unlimited Knowledge Injection",
     description: "Unlimited document uploads and knowledge base entries",
-    price: 79,
+    price: 99,
   },
 ];
 
