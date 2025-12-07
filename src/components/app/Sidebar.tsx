@@ -13,6 +13,7 @@ import {
   Link2,
   Brain,
   CreditCard,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,7 @@ const navItems = [
   { title: "Memory", href: "/app/memory", icon: Brain },
   { title: "Knowledge", href: "/app/knowledge", icon: BookOpen },
   { title: "Billing", href: "/app/billing", icon: CreditCard },
+  { title: "Settings", href: "/app/settings/profile", icon: Settings },
 ];
 
 const Sidebar = () => {
