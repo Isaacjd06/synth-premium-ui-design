@@ -98,7 +98,7 @@ const addons = [
     id: "rapid_booster",
     name: "Rapid Automation Booster Pack",
     description: "Unlock 25,000 additional automation runs instantly",
-    price: 97,
+    price: 49,
   },
   {
     id: "performance_turbo",
