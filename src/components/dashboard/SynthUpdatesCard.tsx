@@ -5,10 +5,7 @@ import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
 import { formatDate, truncate } from "@/lib/utils";
-import { RefreshCw } from "lucide-react";
 
 interface Alert {
   id: string;
@@ -36,7 +33,7 @@ interface Execution {
 interface Stats {
   activeWorkflows: number;
   totalExecutions: number;
-  last24Hours: number;
+  executionsLast24h: number;
   successRate: number;
 }
 
@@ -51,33 +48,21 @@ interface UpdatesData {
 const SynthUpdatesCard = () => {
   const [data, setData] = useState<UpdatesData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/dashboard/updates");
-      const result = await response.json();
-      if (result.ok) {
-        setData(result);
-      } else {
-        throw new Error(result.error || "Failed to fetch updates");
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to fetch updates";
-      setError(message);
-      toast({
-        title: "Error",
-        description: message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("/api/dashboard/updates");
+        const result = await response.json();
+        if (result.ok) {
+          setData(result);
+        }
+      } catch {
+        // Use empty state on error
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchData();
   }, []);
 
@@ -92,11 +77,13 @@ const SynthUpdatesCard = () => {
 
   if (loading) {
     return (
-      <Card className="bg-card border-border p-6">
+      <Card className="bg-card border-border/50 p-6">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <Skeleton className="h-7 w-32 bg-muted" />
-            <Skeleton className="h-6 w-24 bg-muted" />
+            <div>
+              <Skeleton className="h-7 w-32 bg-muted mb-2" />
+              <Skeleton className="h-5 w-40 bg-muted" />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             {[...Array(4)].map((_, i) => (
@@ -105,7 +92,7 @@ const SynthUpdatesCard = () => {
           </div>
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-16 rounded-lg bg-muted" />
+              <Skeleton key={i} className="h-14 rounded-lg bg-muted" />
             ))}
           </div>
         </div>
@@ -113,56 +100,40 @@ const SynthUpdatesCard = () => {
     );
   }
 
-  if (error) {
-    return (
-      <Card className="bg-card border-destructive/50 p-6">
-        <div className="flex flex-col items-center justify-center py-8 space-y-4">
-          <p className="text-destructive text-sm">{error}</p>
-          <Button variant="outline" size="sm" onClick={fetchData}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Retry
-          </Button>
-        </div>
-      </Card>
-    );
-  }
-
-  const stats = data?.stats || { activeWorkflows: 0, totalExecutions: 0, last24Hours: 0, successRate: 0 };
+  const stats = data?.stats || { activeWorkflows: 0, totalExecutions: 0, executionsLast24h: 0, successRate: 0 };
   const updates = data?.updates || [];
   const workflows = data?.recentWorkflows || [];
   const executions = data?.recentExecutions || [];
 
   return (
-    <Card className="bg-card border-border p-6">
+    <Card className="bg-card border-border/50 p-6">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-foreground mb-1">Synth Updates</h2>
-            <div className="flex items-center gap-2">
-              <Badge variant="default" className="bg-green-500/20 text-green-400 border-green-500/30">
-                Operational
-              </Badge>
-              <span className="text-xs text-muted-foreground">System Status</span>
-            </div>
+        <div>
+          <h2 className="text-xl font-semibold text-foreground mb-2">Synth Updates</h2>
+          <div className="flex items-center gap-2">
+            <Badge variant="default" className="bg-green-500/20 text-green-400 border-green-500/30">
+              Operational
+            </Badge>
+            <span className="text-xs text-muted-foreground">System Status</span>
           </div>
         </div>
 
         {/* Statistics Grid - 2x2 */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 rounded-lg bg-muted/30 border border-border">
+          <div className="p-4 rounded-lg bg-muted/20 border border-border/50">
             <p className="text-2xl font-bold text-foreground">{stats.activeWorkflows}</p>
             <p className="text-sm text-muted-foreground">Active Workflows</p>
           </div>
-          <div className="p-4 rounded-lg bg-muted/30 border border-border">
+          <div className="p-4 rounded-lg bg-muted/20 border border-border/50">
             <p className="text-2xl font-bold text-foreground">{stats.totalExecutions}</p>
             <p className="text-sm text-muted-foreground">Total Executions</p>
           </div>
-          <div className="p-4 rounded-lg bg-muted/30 border border-border">
-            <p className="text-2xl font-bold text-foreground">{stats.last24Hours}</p>
+          <div className="p-4 rounded-lg bg-muted/20 border border-border/50">
+            <p className="text-2xl font-bold text-foreground">{stats.executionsLast24h}</p>
             <p className="text-sm text-muted-foreground">Last 24 Hours</p>
           </div>
-          <div className="p-4 rounded-lg bg-muted/30 border border-border">
+          <div className="p-4 rounded-lg bg-muted/20 border border-border/50">
             <p className="text-2xl font-bold text-foreground">{stats.successRate.toFixed(1)}%</p>
             <p className="text-sm text-muted-foreground">Success Rate</p>
           </div>
@@ -171,15 +142,15 @@ const SynthUpdatesCard = () => {
         {/* Recent Alerts */}
         {updates.length > 0 && (
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">Recent Alerts</h3>
+            <h3 className="text-sm font-medium text-foreground/70 mb-3">Recent Alerts</h3>
             <div className="space-y-2">
               {updates.slice(0, 3).map((alert) => (
                 <div
                   key={alert.id}
-                  className="p-3 rounded-lg bg-muted/20 border border-border"
+                  className="p-3 rounded-lg bg-muted/10 border border-border/50"
                 >
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <p className="text-sm font-medium text-foreground">{alert.title}</p>
+                    <p className="text-sm text-foreground">{alert.title}</p>
                     <Badge variant={getPriorityVariant(alert.priority)} className="text-xs capitalize">
                       {alert.priority}
                     </Badge>
@@ -194,10 +165,10 @@ const SynthUpdatesCard = () => {
         {/* Recent Workflows */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-muted-foreground">Recent Workflows</h3>
+            <h3 className="text-sm font-medium text-foreground/70">Recent Workflows</h3>
             <Link 
               to="/app/workflows" 
-              className="text-xs text-primary hover:text-primary/80 transition-colors"
+              className="text-xs text-[#194c92] hover:text-[#1a5ba8] transition-colors"
             >
               View All
             </Link>
@@ -208,17 +179,17 @@ const SynthUpdatesCard = () => {
                 <Link
                   key={workflow.id}
                   to={`/app/workflows/${workflow.id}`}
-                  className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/30 transition-colors block"
+                  className="flex items-center justify-between p-2 rounded hover:bg-muted/30 transition-colors block"
                 >
                   <div>
-                    <p className="text-sm font-medium text-foreground">{truncate(workflow.name, 40)}</p>
+                    <p className="text-sm text-foreground">{truncate(workflow.name, 40)}</p>
                     <p className="text-xs text-muted-foreground">{formatDate(workflow.createdAt)}</p>
                   </div>
                   <Badge 
                     variant="outline" 
                     className={workflow.status === "active" 
                       ? "bg-green-500/10 text-green-400 border-green-500/30" 
-                      : "bg-muted text-muted-foreground border-border"
+                      : "bg-muted/30 text-muted-foreground border-border/50"
                     }
                   >
                     {workflow.status === "active" ? "Active" : "Inactive"}
@@ -234,10 +205,10 @@ const SynthUpdatesCard = () => {
         {/* Recent Executions */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-muted-foreground">Recent Executions</h3>
+            <h3 className="text-sm font-medium text-foreground/70">Recent Executions</h3>
             <Link 
               to="/app/executions" 
-              className="text-xs text-primary hover:text-primary/80 transition-colors"
+              className="text-xs text-[#194c92] hover:text-[#1a5ba8] transition-colors"
             >
               View All
             </Link>
@@ -248,10 +219,12 @@ const SynthUpdatesCard = () => {
                 <Link
                   key={execution.id}
                   to={`/app/workflows/${execution.workflowId}`}
-                  className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/30 transition-colors block"
+                  className="flex items-center justify-between p-2 rounded hover:bg-muted/30 transition-colors block"
                 >
                   <div>
-                    <p className="text-sm font-medium text-foreground">{truncate(execution.workflowName, 40)}</p>
+                    <p className="text-sm text-foreground">
+                      {truncate(execution.workflowName || `Workflow ${execution.workflowId.slice(0, 8)}...`, 40)}
+                    </p>
                     <p className="text-xs text-muted-foreground">{formatDate(execution.createdAt)}</p>
                   </div>
                   <Badge 
