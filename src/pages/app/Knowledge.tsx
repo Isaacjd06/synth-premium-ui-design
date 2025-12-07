@@ -6,8 +6,6 @@ import BusinessRulesSection from "@/components/knowledge/BusinessRulesSection";
 import GlossarySection from "@/components/knowledge/GlossarySection";
 import FileUploadSection from "@/components/knowledge/FileUploadSection";
 import KnowledgeSuggestions from "@/components/knowledge/KnowledgeSuggestions";
-import KnowledgeBaseSection from "@/components/knowledge/KnowledgeBaseSection";
-import { Database, FileText, BookOpen, List, Upload, Brain } from "lucide-react";
 
 const Knowledge = () => {
   return (
@@ -16,48 +14,25 @@ const Knowledge = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground mb-2">
-            Knowledge Base
+            Knowledge & Context
           </h1>
           <p className="text-muted-foreground text-sm sm:text-base max-w-3xl">
-            Store and manage information for your workflows. The more context you provide, 
-            the better Synth understands and automates your business processes.
+            This is where you teach Synth about your business, systems, processes, definitions, 
+            preferences, and rules. The more information you provide, the better Synth performs.
           </p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main Content */}
           <div className="flex-1 min-w-0">
-            <Tabs defaultValue="knowledge" className="w-full">
-              <TabsList className="grid w-full grid-cols-6 mb-6">
-                <TabsTrigger value="knowledge" className="flex items-center gap-1.5">
-                  <Database className="w-4 h-4" />
-                  <span className="hidden sm:inline">Items</span>
-                </TabsTrigger>
-                <TabsTrigger value="structured" className="flex items-center gap-1.5">
-                  <Brain className="w-4 h-4" />
-                  <span className="hidden sm:inline">Profile</span>
-                </TabsTrigger>
-                <TabsTrigger value="unstructured" className="flex items-center gap-1.5">
-                  <FileText className="w-4 h-4" />
-                  <span className="hidden sm:inline">Notes</span>
-                </TabsTrigger>
-                <TabsTrigger value="rules" className="flex items-center gap-1.5">
-                  <List className="w-4 h-4" />
-                  <span className="hidden sm:inline">Rules</span>
-                </TabsTrigger>
-                <TabsTrigger value="glossary" className="flex items-center gap-1.5">
-                  <BookOpen className="w-4 h-4" />
-                  <span className="hidden sm:inline">Glossary</span>
-                </TabsTrigger>
-                <TabsTrigger value="files" className="flex items-center gap-1.5">
-                  <Upload className="w-4 h-4" />
-                  <span className="hidden sm:inline">Files</span>
-                </TabsTrigger>
+            <Tabs defaultValue="structured" className="w-full">
+              <TabsList className="grid w-full grid-cols-5 mb-6">
+                <TabsTrigger value="structured">Profile</TabsTrigger>
+                <TabsTrigger value="unstructured">Notes</TabsTrigger>
+                <TabsTrigger value="rules">Rules</TabsTrigger>
+                <TabsTrigger value="glossary">Glossary</TabsTrigger>
+                <TabsTrigger value="files">Files</TabsTrigger>
               </TabsList>
-
-              <TabsContent value="knowledge">
-                <KnowledgeBaseSection />
-              </TabsContent>
 
               <TabsContent value="structured">
                 <StructuredContextSection />
