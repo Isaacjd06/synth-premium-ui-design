@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type BadgeVariant = "active" | "inactive" | "success" | "error";
+type BadgeVariant = "active" | "inactive" | "success" | "error" | "warning";
 
 interface StatusBadgeProps {
   variant: BadgeVariant;
@@ -12,6 +12,7 @@ const variantStyles: Record<BadgeVariant, string> = {
   inactive: "bg-muted text-muted-foreground border-border",
   success: "bg-green-900/30 text-green-400 border-green-700",
   error: "bg-red-900/30 text-red-400 border-red-700",
+  warning: "bg-yellow-900/30 text-yellow-400 border-yellow-700",
 };
 
 const StatusBadge = ({ variant, children }: StatusBadgeProps) => {
