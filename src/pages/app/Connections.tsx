@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, Loader2, Check, X, Link2, Key, Globe } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Check, X, Link2, Key, Globe, Zap } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import AppCard from "@/components/app/AppCard";
 import StatusBadge from "@/components/app/StatusBadge";
+import AvailableServices from "@/components/connections/AvailableServices";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -119,63 +121,88 @@ const Connections = () => {
     <AppShell>
       <div className="px-4 lg:px-6 py-4 lg:py-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Connections</h1>
-            <p className="text-sm text-muted-foreground">Manage your app connections and integrations.</p>
-          </div>
-          <Button onClick={() => setIsAddOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Connection
-          </Button>
+        <div className="mb-6">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground mb-2">Connected Services</h1>
+          <p className="text-sm text-muted-foreground max-w-2xl">
+            Connect your favorite apps and services to enable powerful automations. 
+            Synth integrates with popular tools to streamline your workflows.
+          </p>
         </div>
 
-        {/* Connections Grid */}
-        {connections.length === 0 ? (
-          <AppCard>
-            <p className="text-muted-foreground text-center py-8">
-              No connections yet. Add your first connection to get started.
-            </p>
-          </AppCard>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {connections.map((connection) => (
-              <AppCard key={connection.id} className="relative">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    {getConnectionIcon(connection.connection_type)}
-                    <h3 className="text-lg font-semibold text-foreground">{connection.service_name}</h3>
-                  </div>
-                  <StatusBadge variant={connection.status === "active" ? "active" : "inactive"}>
-                    {connection.status === "active" ? "Active" : "Inactive"}
-                  </StatusBadge>
-                </div>
-                
-                <div className="space-y-1 text-sm text-muted-foreground mb-4">
-                  <p>Type: {connection.connection_type || "Not specified"}</p>
-                  <p>Created: {formatDate(connection.created_at)}</p>
-                  <p>Last verified: {connection.last_verified ? formatDate(connection.last_verified) : "Never"}</p>
-                </div>
+        <Tabs defaultValue="browse" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="browse" className="flex items-center gap-2">
+              <Zap className="w-4 h-4" />
+              Browse Services
+            </TabsTrigger>
+            <TabsTrigger value="custom" className="flex items-center gap-2">
+              <Link2 className="w-4 h-4" />
+              Custom Connections
+            </TabsTrigger>
+          </TabsList>
 
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => openEditDialog(connection)}>
-                    <Pencil className="w-3 h-3 mr-1" />
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => { setSelectedConnection(connection); setIsDeleteOpen(true); }}
-                  >
-                    <Trash2 className="w-3 h-3 mr-1" />
-                    Delete
-                  </Button>
-                </div>
+          {/* Browse Services Tab */}
+          <TabsContent value="browse">
+            <AvailableServices />
+          </TabsContent>
+
+          {/* Custom Connections Tab */}
+          <TabsContent value="custom">
+            <div className="mb-4 flex justify-end">
+              <Button onClick={() => setIsAddOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Custom Connection
+              </Button>
+            </div>
+
+            {/* Connections Grid */}
+            {connections.length === 0 ? (
+              <AppCard>
+                <p className="text-muted-foreground text-center py-8">
+                  No custom connections yet. Add your first connection to get started.
+                </p>
               </AppCard>
-            ))}
-          </div>
-        )}
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                {connections.map((connection) => (
+                  <AppCard key={connection.id} className="relative">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        {getConnectionIcon(connection.connection_type)}
+                        <h3 className="text-lg font-semibold text-foreground">{connection.service_name}</h3>
+                      </div>
+                      <StatusBadge variant={connection.status === "active" ? "active" : "inactive"}>
+                        {connection.status === "active" ? "Active" : "Inactive"}
+                      </StatusBadge>
+                    </div>
+                    
+                    <div className="space-y-1 text-sm text-muted-foreground mb-4">
+                      <p>Type: {connection.connection_type || "Not specified"}</p>
+                      <p>Created: {formatDate(connection.created_at)}</p>
+                      <p>Last verified: {connection.last_verified ? formatDate(connection.last_verified) : "Never"}</p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => openEditDialog(connection)}>
+                        <Pencil className="w-3 h-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => { setSelectedConnection(connection); setIsDeleteOpen(true); }}
+                      >
+                        <Trash2 className="w-3 h-3 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
+                  </AppCard>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
         {/* Add Dialog */}
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
