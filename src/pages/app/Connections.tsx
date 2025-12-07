@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, Loader2, Check, X, Link2, Key, Globe, Zap } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Check, X, Link2, Key, Globe, Zap, Search, Cloud } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import AppCard from "@/components/app/AppCard";
 import StatusBadge from "@/components/app/StatusBadge";
-import AvailableServices from "@/components/connections/AvailableServices";
+import ConnectionSearch from "@/components/connections/ConnectionSearch";
+import ActiveConnections from "@/components/connections/ActiveConnections";
+import SuggestedConnections from "@/components/connections/SuggestedConnections";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -129,21 +131,31 @@ const Connections = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="browse" className="w-full">
+        <Tabs defaultValue="search" className="w-full">
           <TabsList className="mb-6">
-            <TabsTrigger value="browse" className="flex items-center gap-2">
-              <Zap className="w-4 h-4" />
-              Browse Services
+            <TabsTrigger value="search" className="flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Search Services
+            </TabsTrigger>
+            <TabsTrigger value="active" className="flex items-center gap-2">
+              <Cloud className="w-4 h-4" />
+              Active Connections
             </TabsTrigger>
             <TabsTrigger value="custom" className="flex items-center gap-2">
               <Link2 className="w-4 h-4" />
-              Custom Connections
+              Custom
             </TabsTrigger>
           </TabsList>
 
-          {/* Browse Services Tab */}
-          <TabsContent value="browse">
-            <AvailableServices />
+          {/* Search Services Tab */}
+          <TabsContent value="search" className="space-y-8">
+            <ConnectionSearch />
+            <SuggestedConnections />
+          </TabsContent>
+
+          {/* Active Connections Tab */}
+          <TabsContent value="active">
+            <ActiveConnections />
           </TabsContent>
 
           {/* Custom Connections Tab */}
