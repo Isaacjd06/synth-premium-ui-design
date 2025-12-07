@@ -119,24 +119,19 @@ const SynthUpdatesCard = () => {
           </div>
         </div>
 
-        {/* Statistics Grid - 2x2 */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 rounded-lg bg-muted/20 border border-border/50">
-            <p className="text-2xl font-bold text-foreground">{stats.activeWorkflows}</p>
-            <p className="text-sm text-muted-foreground">Active Workflows</p>
-          </div>
-          <div className="p-4 rounded-lg bg-muted/20 border border-border/50">
-            <p className="text-2xl font-bold text-foreground">{stats.totalExecutions}</p>
-            <p className="text-sm text-muted-foreground">Total Executions</p>
-          </div>
-          <div className="p-4 rounded-lg bg-muted/20 border border-border/50">
-            <p className="text-2xl font-bold text-foreground">{stats.executionsLast24h}</p>
-            <p className="text-sm text-muted-foreground">Last 24 Hours</p>
-          </div>
-          <div className="p-4 rounded-lg bg-muted/20 border border-border/50">
-            <p className="text-2xl font-bold text-foreground">{stats.successRate.toFixed(1)}%</p>
-            <p className="text-sm text-muted-foreground">Success Rate</p>
-          </div>
+        {/* Quick Stats Summary */}
+        <div className="flex items-center gap-4 text-sm">
+          <span className="text-muted-foreground">
+            <span className="text-foreground font-medium">{stats.activeWorkflows}</span> active
+          </span>
+          <span className="text-muted-foreground">•</span>
+          <span className="text-muted-foreground">
+            <span className="text-foreground font-medium">{stats.executionsLast24h}</span> today
+          </span>
+          <span className="text-muted-foreground">•</span>
+          <span className="text-muted-foreground">
+            <span className="text-foreground font-medium">{stats.successRate.toFixed(0)}%</span> success
+          </span>
         </div>
 
         {/* Recent Alerts */}
