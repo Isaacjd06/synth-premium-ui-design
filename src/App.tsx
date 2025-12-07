@@ -16,6 +16,7 @@ import Executions from "./pages/app/Executions";
 import Knowledge from "./pages/app/Knowledge";
 import Connections from "./pages/app/Connections";
 import Memory from "./pages/app/Memory";
+import Billing from "./pages/app/Billing";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/app/knowledge" element={<Knowledge />} />
           <Route path="/app/connections" element={<Connections />} />
           <Route path="/app/memory" element={<Memory />} />
+          <Route path="/app/billing" element={<Billing />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
