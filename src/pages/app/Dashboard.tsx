@@ -5,11 +5,18 @@ import SynthAdvisoryCard from "@/components/dashboard/SynthAdvisoryCard";
 const Dashboard = () => {
   return (
     <AppShell>
-      <div className="px-4 lg:px-6 py-4 lg:py-6">
-        <div className="space-y-6">
-          <SynthUpdatesCard />
-          <SynthAdvisoryCard />
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Page Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            Monitor your automations and get intelligent recommendations
+          </p>
         </div>
+
+        {/* Dashboard Cards */}
+        <SynthUpdatesCard />
+        <SynthAdvisoryCard />
       </div>
     </AppShell>
   );

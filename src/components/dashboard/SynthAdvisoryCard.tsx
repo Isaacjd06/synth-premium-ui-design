@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import AppCard from "@/components/app/AppCard";
-import StatusBadge from "@/components/app/StatusBadge";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/utils";
 import { RefreshCw, Lightbulb } from "lucide-react";
@@ -57,46 +56,46 @@ const SynthAdvisoryCard = () => {
     fetchData();
   }, []);
 
-  const getPriorityVariant = (priority: string) => {
+  const getPriorityVariant = (priority: string): "destructive" | "secondary" | "default" => {
     switch (priority) {
-      case "high": return "error";
-      case "medium": return "warning";
-      case "low": return "success";
-      default: return "inactive";
+      case "high": return "destructive";
+      case "medium": return "secondary";
+      case "low": return "default";
+      default: return "secondary";
     }
   };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case "efficiency": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      case "optimization": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
-      case "reliability": return "bg-red-500/20 text-red-400 border-red-500/30";
-      case "growth": return "bg-green-500/20 text-green-400 border-green-500/30";
-      default: return "bg-muted text-muted-foreground border-border";
+      case "efficiency": return "text-blue-400";
+      case "optimization": return "text-purple-400";
+      case "reliability": return "text-red-400";
+      case "growth": return "text-green-400";
+      default: return "text-muted-foreground";
     }
   };
 
   if (loading) {
     return (
-      <AppCard>
+      <Card className="bg-card border-border p-6">
         <div className="space-y-6">
           <div>
-            <Skeleton className="h-7 w-36 mb-2" />
-            <Skeleton className="h-4 w-64" />
+            <Skeleton className="h-7 w-36 mb-2 bg-muted" />
+            <Skeleton className="h-4 w-64 bg-muted" />
           </div>
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-28 rounded-lg" />
+              <Skeleton key={i} className="h-28 rounded-lg bg-muted" />
             ))}
           </div>
         </div>
-      </AppCard>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <AppCard className="border-destructive/50">
+      <Card className="bg-card border-destructive/50 p-6">
         <div className="flex flex-col items-center justify-center py-8 space-y-4">
           <p className="text-destructive text-sm">{error}</p>
           <Button variant="outline" size="sm" onClick={fetchData}>
@@ -104,65 +103,65 @@ const SynthAdvisoryCard = () => {
             Retry
           </Button>
         </div>
-      </AppCard>
+      </Card>
     );
   }
 
   const insights = data?.insights || [];
 
   return (
-    <AppCard>
-      {/* Header */}
-      <div className="mb-6">
-        <h2 className="font-accent text-xl font-semibold text-foreground">Synth Advisory</h2>
-        <p className="text-sm text-muted-foreground">
-          AI-powered insights and recommendations for your automations
-        </p>
-      </div>
-
-      {/* Insights List */}
-      {insights.length > 0 ? (
-        <div className="space-y-3">
-          {insights.map((insight) => (
-            <div
-              key={insight.id}
-              className="p-4 rounded-lg bg-muted/30 border border-border hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <h4 className="text-sm font-medium text-foreground">{insight.title}</h4>
-                <StatusBadge variant={getPriorityVariant(insight.priority)}>
-                  {insight.priority}
-                </StatusBadge>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                {insight.body}
-              </p>
-              <div className="flex items-center justify-between">
-                <Badge 
-                  variant="outline" 
-                  className={`text-xs capitalize ${getCategoryColor(insight.category)}`}
-                >
-                  {insight.category}
-                </Badge>
-                <span className="text-xs text-muted-foreground">
-                  {formatDate(insight.createdAt)}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-            <Lightbulb className="w-6 h-6 text-muted-foreground" />
-          </div>
-          <p className="text-sm text-foreground mb-1">No advisory insights available at this time.</p>
-          <p className="text-xs text-muted-foreground">
-            Insights will appear as Synth analyzes your workflows and usage patterns.
+    <Card className="bg-card border-border p-6">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h2 className="text-xl font-semibold text-foreground mb-1">Synth Advisory</h2>
+          <p className="text-sm text-muted-foreground">
+            AI-powered insights and recommendations for your automations
           </p>
         </div>
-      )}
-    </AppCard>
+
+        {/* Insights List */}
+        {insights.length > 0 ? (
+          <div className="space-y-4">
+            {insights.map((insight) => (
+              <div
+                key={insight.id}
+                className="p-4 rounded-lg bg-muted/20 border border-border hover:bg-muted/30 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <h4 className="text-sm font-medium text-foreground">{insight.title}</h4>
+                  <Badge variant={getPriorityVariant(insight.priority)} className="text-xs capitalize">
+                    {insight.priority}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                  {insight.body}
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs capitalize ${getCategoryColor(insight.category)}`}>
+                    {insight.category}
+                  </span>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(insight.createdAt)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center mb-4">
+              <Lightbulb className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-foreground mb-1">No advisory insights available at this time.</p>
+            <p className="text-xs text-muted-foreground">
+              Insights will appear as Synth analyzes your workflows and usage patterns.
+            </p>
+          </div>
+        )}
+      </div>
+    </Card>
   );
 };
 
