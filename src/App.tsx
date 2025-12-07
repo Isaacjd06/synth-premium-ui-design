@@ -2,10 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Pricing from "./pages/Pricing";
 import Waitlist from "./pages/Waitlist";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/app/Dashboard";
 import Chat from "./pages/app/Chat";
@@ -18,6 +19,9 @@ import Connections from "./pages/app/Connections";
 import Memory from "./pages/app/Memory";
 import Billing from "./pages/app/Billing";
 import Checkout from "./pages/app/Checkout";
+import Settings from "./pages/app/Settings";
+import SettingsProfile from "./pages/app/SettingsProfile";
+import SettingsAccount from "./pages/app/SettingsAccount";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +35,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/waitlist" element={<Waitlist />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/app/dashboard" element={<Dashboard />} />
           <Route path="/app/chat" element={<Chat />} />
           <Route path="/app/workflows" element={<Workflows />} />
@@ -42,6 +47,11 @@ const App = () => (
           <Route path="/app/memory" element={<Memory />} />
           <Route path="/app/billing" element={<Billing />} />
           <Route path="/app/checkout" element={<Checkout />} />
+          <Route path="/app/settings" element={<Settings />}>
+            <Route index element={<Navigate to="/app/settings/profile" replace />} />
+            <Route path="profile" element={<SettingsProfile />} />
+            <Route path="account" element={<SettingsAccount />} />
+          </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
