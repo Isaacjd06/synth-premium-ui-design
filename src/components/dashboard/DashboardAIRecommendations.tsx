@@ -14,12 +14,12 @@ const recommendations = [
 
 const DashboardAIRecommendations = () => {
   return (
-    <Card className="bg-card border-border/50 p-5">
+    <Card className="bg-card border-border/50 p-5 h-full flex flex-col">
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="w-5 h-5 text-primary" />
         <h2 className="text-lg font-semibold text-foreground">AI Recommendations</h2>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2 flex-1 overflow-y-auto">
         {recommendations.map((rec, index) => (
           <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
             <rec.icon className="w-4 h-4 text-primary" />

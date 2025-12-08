@@ -20,12 +20,12 @@ const statusConfig = {
 
 const DashboardIntegrationHealth = () => {
   return (
-    <Card className="bg-card border-border/50 p-5">
+    <Card className="bg-card border-border/50 p-5 h-full flex flex-col">
       <div className="flex items-center gap-2 mb-4">
         <Link2 className="w-5 h-5 text-primary" />
         <h2 className="text-lg font-semibold text-foreground">Connected Apps Health</h2>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2 flex-1">
         {integrations.map((int, index) => {
           const config = statusConfig[int.status];
           const StatusIcon = config.icon;

@@ -26,13 +26,13 @@ const severityColors = {
 
 const DashboardWorkflowRankings = () => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card className="bg-card border-border/50 p-5">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+      <Card className="bg-card border-border/50 p-5 h-full flex flex-col">
         <div className="flex items-center gap-2 mb-4">
           <Trophy className="w-5 h-5 text-yellow-400" />
           <h2 className="text-lg font-semibold text-foreground">Top Workflows</h2>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 flex-1">
           {topWorkflows.map((wf, index) => (
             <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
               <span className="text-sm font-bold text-muted-foreground w-5">#{index + 1}</span>
@@ -53,12 +53,12 @@ const DashboardWorkflowRankings = () => {
         </div>
       </Card>
 
-      <Card className="bg-card border-border/50 p-5">
+      <Card className="bg-card border-border/50 p-5 h-full flex flex-col">
         <div className="flex items-center gap-2 mb-4">
           <AlertCircle className="w-5 h-5 text-red-400" />
           <h2 className="text-lg font-semibold text-foreground">Workflows With Most Errors</h2>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 flex-1">
           {errorWorkflows.map((wf, index) => (
             <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
               <span className="text-lg font-bold text-red-400">{wf.errors}</span>

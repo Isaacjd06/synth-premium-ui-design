@@ -17,12 +17,12 @@ const patternColors = {
 
 const DashboardIncidentInsights = () => {
   return (
-    <Card className="bg-card border-border/50 p-5">
+    <Card className="bg-card border-border/50 p-5 h-full flex flex-col">
       <div className="flex items-center gap-2 mb-4">
         <AlertOctagon className="w-5 h-5 text-red-400" />
         <h2 className="text-lg font-semibold text-foreground">Error Insights & Incidents</h2>
       </div>
-      <div className="space-y-3">
+      <div className="space-y-3 flex-1">
         {incidents.map((incident, index) => (
           <div key={index} className="p-4 rounded-lg bg-muted/30 border border-border/50">
             <div className="flex items-start justify-between gap-3 mb-2">
