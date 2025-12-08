@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import SynthUpdateItem, { UpdateType } from "./SynthUpdateItem";
 
 // Placeholder data - will be replaced with API data
@@ -82,16 +83,20 @@ const SynthUpdatesSection = () => {
         </p>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[420px] pr-4">
-          <div className="space-y-3">
-            {placeholderUpdates.map((update) => (
-              <SynthUpdateItem
-                key={update.id}
-                type={update.type}
-                title={update.title}
-                description={update.description}
-                timestamp={update.timestamp}
-              />
+        <ScrollArea className="h-[480px] pr-4">
+          <div className="space-y-0">
+            {placeholderUpdates.map((update, index) => (
+              <div key={update.id}>
+                <SynthUpdateItem
+                  type={update.type}
+                  title={update.title}
+                  description={update.description}
+                  timestamp={update.timestamp}
+                />
+                {index < placeholderUpdates.length - 1 && (
+                  <Separator className="my-3 bg-border/30" />
+                )}
+              </div>
             ))}
           </div>
         </ScrollArea>

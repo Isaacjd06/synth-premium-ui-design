@@ -8,7 +8,7 @@ const Dashboard = () => {
     <AppShell>
       <div className="max-w-screen-xl mx-auto px-4 py-6 space-y-6">
         {/* Page Header */}
-        <div>
+        <div className="animate-fade-in">
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground mt-1">
             Monitor your automations and get intelligent recommendations
@@ -16,11 +16,17 @@ const Dashboard = () => {
         </div>
 
         {/* Statistics Grid */}
-        <DashboardStatsGrid />
+        <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
+          <DashboardStatsGrid />
+        </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Synth Updates - Full Width Major Section */}
+        <div className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
           <SynthUpdatesSection />
+        </div>
+
+        {/* Synth Advisory - Full Width Below Updates */}
+        <div className="animate-fade-in" style={{ animationDelay: "0.3s" }}>
           <SynthAdvisorySection />
         </div>
       </div>
