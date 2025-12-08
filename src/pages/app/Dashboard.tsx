@@ -7,29 +7,45 @@ import SynthAdvisorySection from "@/components/dashboard/SynthAdvisorySection";
 const Dashboard = () => {
   return (
     <AppShell>
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="max-w-screen-xl mx-auto px-4 py-6 space-y-6"
-      >
+      <div className="max-w-screen-xl mx-auto px-4 py-6 space-y-6">
         {/* Page Header */}
-        <div>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground mt-1">
             Monitor your automations and get intelligent recommendations
           </p>
-        </div>
+        </motion.div>
 
         {/* Statistics Grid */}
-        <DashboardStatsGrid />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <DashboardStatsGrid />
+        </motion.div>
 
         {/* Synth Updates - Full Width Major Section */}
-        <SynthUpdatesSection />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+        >
+          <SynthUpdatesSection />
+        </motion.div>
 
         {/* Synth Advisory - Full Width Below Updates */}
-        <SynthAdvisorySection />
-      </motion.div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <SynthAdvisorySection />
+        </motion.div>
+      </div>
     </AppShell>
   );
 };
