@@ -494,10 +494,19 @@ const WorkflowDetail = () => {
                   <Button 
                     variant="outline"
                     disabled={workflow.readOnly}
-                    onClick={() => toast.info("Workflow editor coming soon")}
+                    asChild={!workflow.readOnly}
                   >
-                    <Pencil className="w-4 h-4 mr-2" />
-                    Edit Workflow
+                    {workflow.readOnly ? (
+                      <>
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Edit Workflow
+                      </>
+                    ) : (
+                      <Link to={`/app/workflows/${id}/edit`}>
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Edit Workflow
+                      </Link>
+                    )}
                   </Button>
                 </span>
               </TooltipTrigger>

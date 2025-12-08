@@ -12,6 +12,7 @@ import Chat from "./pages/app/Chat";
 import Workflows from "./pages/app/Workflows";
 import CreateWorkflow from "./pages/app/CreateWorkflow";
 import WorkflowDetail from "./pages/app/WorkflowDetail";
+import WorkflowEdit from "./pages/app/WorkflowEdit";
 import Executions from "./pages/app/Executions";
 import Knowledge from "./pages/app/Knowledge";
 import Connections from "./pages/app/Connections";
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/app/workflows" element={<Workflows />} />
           <Route path="/app/workflows/create" element={<CreateWorkflow />} />
           <Route path="/app/workflows/:id" element={<WorkflowDetail />} />
+          <Route path="/app/workflows/:id/edit" element={<WorkflowEdit />} />
           <Route path="/app/executions" element={<Executions />} />
           <Route path="/app/knowledge" element={<Knowledge />} />
           <Route path="/app/connections" element={<Connections />} />
