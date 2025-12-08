@@ -2,6 +2,23 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { 
   ArrowLeft,
   AlertTriangle,
   Save,
@@ -10,20 +27,11 @@ import {
   Clock,
   Hand,
   Zap,
-  Mail,
-  MessageSquare,
-  Database,
   Plus,
   Trash2,
-  Settings,
-  Bell,
-  Server,
-  Link2,
-  Cpu,
-  Timer,
-  GitBranch,
-  FileText,
-  Phone
+  GripVertical,
+  Sparkles,
+  LayoutTemplate
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import AppCard from "@/components/app/AppCard";
@@ -37,48 +45,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-
-// Action category definitions
-const actionCategories = [
-  { value: "notifications", label: "Notifications", icon: Bell, description: "Send emails, messages, SMS" },
-  { value: "data", label: "Data Operations", icon: Database, description: "Insert, update, query data" },
-  { value: "integrations", label: "Integrations", icon: Link2, description: "Connect to external services" },
-  { value: "logic", label: "Logic / Utilities", icon: Cpu, description: "Delays, branching, transforms" },
-];
-
-// Action types per category
-const actionTypesByCategory: Record<string, Array<{ value: string; label: string; icon: React.ElementType }>> = {
-  notifications: [
-    { value: "send_email", label: "Send Email", icon: Mail },
-    { value: "slack_message", label: "Send Slack Message", icon: MessageSquare },
-    { value: "send_sms", label: "Send SMS", icon: Phone },
-  ],
-  data: [
-    { value: "database_insert", label: "Insert Database Record", icon: Database },
-    { value: "database_update", label: "Update Database Record", icon: Database },
-    { value: "append_sheet", label: "Append to Google Sheet", icon: FileText },
-  ],
-  integrations: [
-    { value: "http_request", label: "HTTP Request", icon: Server },
-    { value: "crm_create", label: "Create CRM Contact", icon: Link2 },
-    { value: "notion_add", label: "Add to Notion", icon: FileText },
-  ],
-  logic: [
-    { value: "delay", label: "Delay", icon: Timer },
-    { value: "branch", label: "Conditional Branch", icon: GitBranch },
-    { value: "transform", label: "Transform Data", icon: Settings },
-  ],
-};
-
-// Get category from action type
-const getCategoryFromType = (type: string): string => {
-  for (const [category, types] of Object.entries(actionTypesByCategory)) {
-    if (types.some(t => t.value === type)) {
-      return category;
-    }
-  }
-  return "notifications";
-};
+import { ActionTemplateModal, actionTemplates, type ActionTemplate } from "@/components/workflows/ActionTemplateModal";
+import { AIAssistPanel, type AISuggestion } from "@/components/workflows/AIAssistPanel";
+import { ActionFieldsRenderer } from "@/components/workflows/ActionFieldsRenderer";
 
 // Trigger type options
 const triggerTypeOptions = [
@@ -94,7 +63,6 @@ type TriggerType = "webhook" | "schedule" | "manual" | "event";
 interface Action {
   id: string;
   type: string;
-  category: string;
   config: Record<string, unknown>;
 }
 
@@ -128,47 +96,153 @@ const mockWorkflow = {
   n8n_workflow_id: "n8n_wf_789xyz",
   trigger: { type: "webhook" as TriggerType, config: { path: "/new-user", method: "POST" } },
   actions: [
-    { id: "action_1", type: "send_email", category: "notifications", config: { to: "{{user.email}}", subject: "Welcome to Synth!", body: "Hi {{user.name}}, welcome aboard!" } },
-    { id: "action_2", type: "slack_message", category: "notifications", config: { channel: "#new-users", message: "New user signed up: {{user.name}}" } },
-    { id: "action_3", type: "database_insert", category: "data", config: { table: "user_events", data: { event: "signup", user_id: "{{user.id}}" } } },
+    { id: "action_1", type: "send_email", config: { to: "{{user.email}}", subject: "Welcome to Synth!", body: "Hi {{user.name}}, welcome aboard!" } },
+    { id: "action_2", type: "slack_message", config: { channel: "#new-users", message: "New user signed up: {{user.name}}", includeAttachments: false } },
+    { id: "action_3", type: "database_insert", config: { table: "user_events", fields: [{ key: "event", value: "signup" }, { key: "user_id", value: "{{user.id}}" }] } },
   ],
 };
 
-// Get default config for action type
-const getDefaultConfig = (type: string): Record<string, unknown> => {
-  switch (type) {
-    case "send_email":
-      return { to: "", subject: "", body: "" };
-    case "slack_message":
-      return { channel: "", message: "" };
-    case "send_sms":
-      return { phoneNumber: "", message: "" };
-    case "database_insert":
-    case "database_update":
-      return { table: "", fields: [{ key: "", value: "" }] };
-    case "append_sheet":
-      return { sheetId: "", sheetName: "", row: [{ column: "", value: "" }] };
-    case "http_request":
-      return { url: "", method: "POST", headers: {}, body: "" };
-    case "crm_create":
-      return { crm: "hubspot", firstName: "", lastName: "", email: "", company: "" };
-    case "notion_add":
-      return { databaseId: "", properties: [{ name: "", value: "" }] };
-    case "delay":
-      return { duration: 5, unit: "seconds" };
-    case "branch":
-      return { condition: "", trueBranch: "", falseBranch: "" };
-    case "transform":
-      return { input: "", operation: "uppercase", output: "" };
-    default:
-      return {};
-  }
+// Get action label from type
+const getActionLabel = (type: string): string => {
+  const template = actionTemplates.find(t => t.type === type);
+  return template?.label || type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
+
+// Sortable Action Card Component
+interface SortableActionCardProps {
+  action: Action;
+  index: number;
+  isReadOnly: boolean;
+  onRemove: (id: string) => void;
+  onUpdateType: (id: string, type: string) => void;
+  onUpdateConfig: (id: string, field: string, value: unknown) => void;
+  onOpenTemplates: (replaceId: string) => void;
+}
+
+function SortableActionCard({ 
+  action, 
+  index, 
+  isReadOnly, 
+  onRemove, 
+  onUpdateType,
+  onUpdateConfig,
+  onOpenTemplates 
+}: SortableActionCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: action.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="p-4 rounded-lg bg-muted/30 border border-border/30"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          {/* Drag Handle */}
+          <button
+            {...attributes}
+            {...listeners}
+            disabled={isReadOnly}
+            className={`p-1 rounded hover:bg-muted/50 cursor-grab active:cursor-grabbing ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <GripVertical className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-xs font-medium text-primary">
+            {index + 1}
+          </div>
+          <span className="text-sm font-medium text-foreground">
+            {action.type ? getActionLabel(action.type) : "New Action"}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onOpenTemplates(action.id)}
+            disabled={isReadOnly}
+            className="text-muted-foreground hover:text-primary"
+          >
+            <LayoutTemplate className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onRemove(action.id)}
+            disabled={isReadOnly}
+            className="text-muted-foreground hover:text-destructive"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Action Type Selection */}
+      {!action.type && (
+        <div className="mb-4">
+          <Label className="text-xs text-muted-foreground mb-2 block">Select Action Type</Label>
+          <Select
+            value={action.type || ""}
+            onValueChange={(value) => onUpdateType(action.id, value)}
+            disabled={isReadOnly}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Choose an action..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="send_email">Send Email</SelectItem>
+              <SelectItem value="slack_message">Send Slack Message</SelectItem>
+              <SelectItem value="send_sms">Send SMS</SelectItem>
+              <SelectItem value="database_insert">Insert Database Record</SelectItem>
+              <SelectItem value="database_update">Update Database Record</SelectItem>
+              <SelectItem value="append_sheet">Append to Spreadsheet</SelectItem>
+              <SelectItem value="crm_create">Create CRM Contact</SelectItem>
+              <SelectItem value="notion_create">Create Notion Page</SelectItem>
+              <SelectItem value="http_request">HTTP API Request</SelectItem>
+              <SelectItem value="delay">Delay</SelectItem>
+              <SelectItem value="branch">Condition / Branch</SelectItem>
+              <SelectItem value="transform">Transform Text</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-2">
+            Or use the template icon above to browse all options.
+          </p>
+        </div>
+      )}
+
+      {/* Action Fields */}
+      <ActionFieldsRenderer
+        actionId={action.id}
+        actionType={action.type}
+        config={action.config}
+        isReadOnly={isReadOnly}
+        onUpdateConfig={onUpdateConfig}
+      />
+    </div>
+  );
+}
 
 const WorkflowEdit = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("basic");
   const isReadOnly = mockWorkflow.readOnly;
+
+  // Modals state
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const [aiAssistOpen, setAiAssistOpen] = useState(false);
+  const [replaceActionId, setReplaceActionId] = useState<string | null>(null);
 
   // Unified workflow state
   const [workflowState, setWorkflowState] = useState<WorkflowState>(() => ({
@@ -177,41 +251,38 @@ const WorkflowEdit = () => {
     intent: mockWorkflow.intent || "",
     active: mockWorkflow.active,
     trigger: mockWorkflow.trigger,
-    actions: mockWorkflow.actions.map(a => ({
-      ...a,
-      category: a.category || getCategoryFromType(a.type)
-    })),
+    actions: mockWorkflow.actions,
   }));
 
-  // JSON strings for Advanced editing (derived from workflowState)
+  // JSON strings for Advanced editing
   const [triggerJson, setTriggerJson] = useState("");
   const [actionsJson, setActionsJson] = useState("");
   const [jsonError, setJsonError] = useState<string | null>(null);
 
-  // Sync JSON strings when workflowState changes (Basic -> Advanced)
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Sync JSON strings when workflowState changes
   useEffect(() => {
     setTriggerJson(JSON.stringify(workflowState.trigger, null, 2));
-    // Remove category from JSON display (internal field)
-    const actionsForJson = workflowState.actions.map(({ category, ...rest }) => rest);
-    setActionsJson(JSON.stringify(actionsForJson, null, 2));
+    setActionsJson(JSON.stringify(workflowState.actions, null, 2));
   }, [workflowState]);
 
-  // Parse JSON and update workflowState (Advanced -> Basic)
+  // Parse JSON and update workflowState
   const applyJsonChanges = useCallback(() => {
     try {
       const parsedTrigger = JSON.parse(triggerJson);
       const parsedActions = JSON.parse(actionsJson);
       
-      // Add category back to actions
-      const actionsWithCategory = parsedActions.map((a: Omit<Action, 'category'>) => ({
-        ...a,
-        category: getCategoryFromType(a.type)
-      }));
-
       setWorkflowState(prev => ({
         ...prev,
         trigger: parsedTrigger,
-        actions: actionsWithCategory,
+        actions: parsedActions,
       }));
       setJsonError(null);
     } catch (e) {
@@ -219,7 +290,7 @@ const WorkflowEdit = () => {
     }
   }, [triggerJson, actionsJson]);
 
-  // Auto-apply JSON changes when switching tabs from Advanced to Basic
+  // Auto-apply JSON changes when switching tabs
   useEffect(() => {
     if (activeTab === "basic") {
       applyJsonChanges();
@@ -254,7 +325,6 @@ const WorkflowEdit = () => {
     const newAction: Action = {
       id: `action_${Date.now()}`,
       type: "",
-      category: "",
       config: {}
     };
     setWorkflowState(prev => ({
@@ -270,24 +340,15 @@ const WorkflowEdit = () => {
     }));
   };
 
-  const updateActionCategory = (actionId: string, category: string) => {
-    setWorkflowState(prev => ({
-      ...prev,
-      actions: prev.actions.map(a => {
-        if (a.id === actionId) {
-          return { ...a, category, type: "", config: {} };
-        }
-        return a;
-      })
-    }));
-  };
-
   const updateActionType = (actionId: string, type: string) => {
+    const template = actionTemplates.find(t => t.type === type);
+    const defaultConfig = template?.defaultConfig || {};
+    
     setWorkflowState(prev => ({
       ...prev,
       actions: prev.actions.map(a => {
         if (a.id === actionId) {
-          return { ...a, type, config: getDefaultConfig(type) };
+          return { ...a, type, config: defaultConfig };
         }
         return a;
       })
@@ -306,6 +367,81 @@ const WorkflowEdit = () => {
     }));
   };
 
+  // Drag and drop handler
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      setWorkflowState(prev => {
+        const oldIndex = prev.actions.findIndex(a => a.id === active.id);
+        const newIndex = prev.actions.findIndex(a => a.id === over.id);
+        
+        return {
+          ...prev,
+          actions: arrayMove(prev.actions, oldIndex, newIndex)
+        };
+      });
+    }
+  };
+
+  // Template selection handler
+  const handleSelectTemplate = (template: ActionTemplate) => {
+    if (replaceActionId) {
+      // Replace existing action
+      setWorkflowState(prev => ({
+        ...prev,
+        actions: prev.actions.map(a => {
+          if (a.id === replaceActionId) {
+            return {
+              ...a,
+              type: template.type,
+              config: { ...template.defaultConfig }
+            };
+          }
+          return a;
+        })
+      }));
+      setReplaceActionId(null);
+    } else {
+      // Add new action
+      const newAction: Action = {
+        id: `action_${Date.now()}`,
+        type: template.type,
+        config: { ...template.defaultConfig }
+      };
+      setWorkflowState(prev => ({
+        ...prev,
+        actions: [...prev.actions, newAction]
+      }));
+    }
+  };
+
+  const openTemplatesForReplace = (actionId: string) => {
+    setReplaceActionId(actionId);
+    setTemplateModalOpen(true);
+  };
+
+  const openTemplatesForNew = () => {
+    setReplaceActionId(null);
+    setTemplateModalOpen(true);
+  };
+
+  // AI Assist handler
+  const handleAISuggestion = (suggestion: AISuggestion) => {
+    const newAction: Action = {
+      id: `action_${Date.now()}`,
+      type: suggestion.actionType,
+      config: suggestion.config
+    };
+    setWorkflowState(prev => ({
+      ...prev,
+      actions: [...prev.actions, newAction]
+    }));
+    toast.success("AI suggestion applied", {
+      description: suggestion.reasoning
+    });
+  };
+
   const handleSave = () => {
     const saveData = {
       name: workflowState.name,
@@ -313,455 +449,12 @@ const WorkflowEdit = () => {
       intent: workflowState.intent,
       active: workflowState.active,
       trigger: workflowState.trigger,
-      actions: workflowState.actions.map(({ category, ...rest }) => rest),
+      actions: workflowState.actions,
     };
     console.log("Saving workflow:", saveData);
     toast.success("Changes saved successfully", {
       description: "Your workflow has been updated."
     });
-  };
-
-  // Render action fields based on type
-  const renderActionFields = (action: Action) => {
-    const config = action.config;
-    
-    switch (action.type) {
-      case "send_email":
-        return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs text-muted-foreground">To</Label>
-              <Input
-                value={(config.to as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "to", e.target.value)}
-                placeholder="{{user.email}}"
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Subject</Label>
-              <Input
-                value={(config.subject as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "subject", e.target.value)}
-                placeholder="Enter email subject"
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Message Body</Label>
-              <Textarea
-                value={(config.body as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "body", e.target.value)}
-                placeholder="Enter email body"
-                disabled={isReadOnly}
-                className="mt-1 min-h-[80px]"
-              />
-            </div>
-          </div>
-        );
-      
-      case "slack_message":
-        return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs text-muted-foreground">Channel</Label>
-              <Input
-                value={(config.channel as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "channel", e.target.value)}
-                placeholder="#general"
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Message</Label>
-              <Textarea
-                value={(config.message as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "message", e.target.value)}
-                placeholder="Enter message"
-                disabled={isReadOnly}
-                className="mt-1 min-h-[80px]"
-              />
-            </div>
-          </div>
-        );
-
-      case "send_sms":
-        return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs text-muted-foreground">Phone Number</Label>
-              <Input
-                value={(config.phoneNumber as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "phoneNumber", e.target.value)}
-                placeholder="+1234567890"
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Message</Label>
-              <Textarea
-                value={(config.message as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "message", e.target.value)}
-                placeholder="Enter SMS message"
-                disabled={isReadOnly}
-                className="mt-1 min-h-[80px]"
-              />
-            </div>
-          </div>
-        );
-      
-      case "database_insert":
-      case "database_update":
-        return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs text-muted-foreground">Table Name</Label>
-              <Input
-                value={(config.table as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "table", e.target.value)}
-                placeholder="users"
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Fields (key=value, one per line)</Label>
-              <Textarea
-                value={(config.fieldsText as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "fieldsText", e.target.value)}
-                placeholder="name={{user.name}}&#10;email={{user.email}}"
-                disabled={isReadOnly}
-                className="mt-1 min-h-[80px] font-mono text-sm"
-              />
-            </div>
-          </div>
-        );
-
-      case "append_sheet":
-        return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs text-muted-foreground">Sheet ID</Label>
-              <Input
-                value={(config.sheetId as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "sheetId", e.target.value)}
-                placeholder="1BxiM..."
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Sheet Name</Label>
-              <Input
-                value={(config.sheetName as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "sheetName", e.target.value)}
-                placeholder="Sheet1"
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Row Data (column=value, one per line)</Label>
-              <Textarea
-                value={(config.rowText as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "rowText", e.target.value)}
-                placeholder="Name={{user.name}}&#10;Email={{user.email}}"
-                disabled={isReadOnly}
-                className="mt-1 min-h-[80px] font-mono text-sm"
-              />
-            </div>
-          </div>
-        );
-      
-      case "http_request":
-        return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs text-muted-foreground">URL</Label>
-              <Input
-                value={(config.url as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "url", e.target.value)}
-                placeholder="https://api.example.com/endpoint"
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Method</Label>
-              <Select
-                value={(config.method as string) || "POST"}
-                onValueChange={(value) => updateActionConfig(action.id, "method", value)}
-                disabled={isReadOnly}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="GET">GET</SelectItem>
-                  <SelectItem value="POST">POST</SelectItem>
-                  <SelectItem value="PUT">PUT</SelectItem>
-                  <SelectItem value="DELETE">DELETE</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Request Body</Label>
-              <Textarea
-                value={(config.body as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "body", e.target.value)}
-                placeholder='{"key": "value"}'
-                disabled={isReadOnly}
-                className="mt-1 min-h-[80px] font-mono text-sm"
-              />
-            </div>
-          </div>
-        );
-
-      case "crm_create":
-        return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs text-muted-foreground">CRM Platform</Label>
-              <Select
-                value={(config.crm as string) || "hubspot"}
-                onValueChange={(value) => updateActionConfig(action.id, "crm", value)}
-                disabled={isReadOnly}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hubspot">HubSpot</SelectItem>
-                  <SelectItem value="salesforce">Salesforce</SelectItem>
-                  <SelectItem value="pipedrive">Pipedrive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs text-muted-foreground">First Name</Label>
-                <Input
-                  value={(config.firstName as string) || ""}
-                  onChange={(e) => updateActionConfig(action.id, "firstName", e.target.value)}
-                  placeholder="{{user.firstName}}"
-                  disabled={isReadOnly}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Last Name</Label>
-                <Input
-                  value={(config.lastName as string) || ""}
-                  onChange={(e) => updateActionConfig(action.id, "lastName", e.target.value)}
-                  placeholder="{{user.lastName}}"
-                  disabled={isReadOnly}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Email</Label>
-              <Input
-                value={(config.email as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "email", e.target.value)}
-                placeholder="{{user.email}}"
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Company</Label>
-              <Input
-                value={(config.company as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "company", e.target.value)}
-                placeholder="{{user.company}}"
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-          </div>
-        );
-
-      case "notion_add":
-        return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs text-muted-foreground">Database ID</Label>
-              <Input
-                value={(config.databaseId as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "databaseId", e.target.value)}
-                placeholder="abc123..."
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Properties (name=value, one per line)</Label>
-              <Textarea
-                value={(config.propertiesText as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "propertiesText", e.target.value)}
-                placeholder="Title={{title}}&#10;Status=New"
-                disabled={isReadOnly}
-                className="mt-1 min-h-[80px] font-mono text-sm"
-              />
-            </div>
-          </div>
-        );
-
-      case "delay":
-        return (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs text-muted-foreground">Duration</Label>
-                <Input
-                  type="number"
-                  value={(config.duration as number) || 5}
-                  onChange={(e) => updateActionConfig(action.id, "duration", parseInt(e.target.value) || 0)}
-                  placeholder="5"
-                  disabled={isReadOnly}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Unit</Label>
-                <Select
-                  value={(config.unit as string) || "seconds"}
-                  onValueChange={(value) => updateActionConfig(action.id, "unit", value)}
-                  disabled={isReadOnly}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="seconds">Seconds</SelectItem>
-                    <SelectItem value="minutes">Minutes</SelectItem>
-                    <SelectItem value="hours">Hours</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-        );
-
-      case "branch":
-        return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs text-muted-foreground">Condition</Label>
-              <Input
-                value={(config.condition as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "condition", e.target.value)}
-                placeholder="{{user.plan}} == 'premium'"
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">If True (action ID or label)</Label>
-              <Input
-                value={(config.trueBranch as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "trueBranch", e.target.value)}
-                placeholder="send_premium_email"
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">If False (action ID or label)</Label>
-              <Input
-                value={(config.falseBranch as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "falseBranch", e.target.value)}
-                placeholder="send_standard_email"
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-          </div>
-        );
-
-      case "transform":
-        return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs text-muted-foreground">Input Value</Label>
-              <Input
-                value={(config.input as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "input", e.target.value)}
-                placeholder="{{user.name}}"
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Operation</Label>
-              <Select
-                value={(config.operation as string) || "uppercase"}
-                onValueChange={(value) => updateActionConfig(action.id, "operation", value)}
-                disabled={isReadOnly}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="uppercase">Uppercase</SelectItem>
-                  <SelectItem value="lowercase">Lowercase</SelectItem>
-                  <SelectItem value="trim">Trim Whitespace</SelectItem>
-                  <SelectItem value="split">Split by Delimiter</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Output Variable</Label>
-              <Input
-                value={(config.output as string) || ""}
-                onChange={(e) => updateActionConfig(action.id, "output", e.target.value)}
-                placeholder="transformedName"
-                disabled={isReadOnly}
-                className="mt-1"
-              />
-            </div>
-          </div>
-        );
-
-      default:
-        if (!action.type) {
-          return (
-            <p className="text-sm text-muted-foreground italic">
-              Select an action type above to configure this action.
-            </p>
-          );
-        }
-        return (
-          <p className="text-sm text-muted-foreground">
-            Configure this action in Advanced Editing mode.
-          </p>
-        );
-    }
-  };
-
-  const getActionIcon = (type: string) => {
-    for (const types of Object.values(actionTypesByCategory)) {
-      const found = types.find(t => t.value === type);
-      if (found) {
-        const Icon = found.icon;
-        return <Icon className="w-4 h-4 text-primary" />;
-      }
-    }
-    return <Settings className="w-4 h-4 text-primary" />;
-  };
-
-  const getCategoryIcon = (category: string) => {
-    const cat = actionCategories.find(c => c.value === category);
-    if (cat) {
-      const Icon = cat.icon;
-      return <Icon className="w-4 h-4" />;
-    }
-    return <Settings className="w-4 h-4" />;
   };
 
   return (
@@ -982,111 +675,82 @@ const WorkflowEdit = () => {
                 <div>
                   <h2 className="text-lg font-medium text-foreground">Actions</h2>
                   <p className="text-sm text-muted-foreground">
-                    Define what happens when this workflow runs.
+                    Define what happens when this workflow runs. Drag to reorder.
                   </p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={addAction}
-                  disabled={isReadOnly}
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Action
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAiAssistOpen(true)}
+                    disabled={isReadOnly}
+                  >
+                    <Sparkles className="w-4 h-4 mr-1" />
+                    AI Assist
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={openTemplatesForNew}
+                    disabled={isReadOnly}
+                  >
+                    <LayoutTemplate className="w-4 h-4 mr-1" />
+                    Templates
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={addAction}
+                    disabled={isReadOnly}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add
+                  </Button>
+                </div>
               </div>
 
               {workflowState.actions.length === 0 ? (
                 <div className="p-6 rounded-lg border border-dashed border-border/50 text-center">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mb-3">
                     No actions configured. Add an action to define what happens when this workflow runs.
                   </p>
+                  <div className="flex justify-center gap-2">
+                    <Button variant="outline" size="sm" onClick={openTemplatesForNew} disabled={isReadOnly}>
+                      <LayoutTemplate className="w-4 h-4 mr-1" />
+                      Browse Templates
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setAiAssistOpen(true)} disabled={isReadOnly}>
+                      <Sparkles className="w-4 h-4 mr-1" />
+                      Use AI Assist
+                    </Button>
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {workflowState.actions.map((action, idx) => (
-                    <div
-                      key={action.id}
-                      className="p-4 rounded-lg bg-muted/30 border border-border/30"
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-xs font-medium text-primary">
-                            {idx + 1}
-                          </div>
-                          <span className="text-sm font-medium text-foreground">Action Step</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeAction(action.id)}
-                          disabled={isReadOnly}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-
-                      {/* Category Selection */}
-                      <div className="mb-4">
-                        <Label className="text-xs text-muted-foreground mb-2 block">Action Category</Label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {actionCategories.map((cat) => {
-                            const Icon = cat.icon;
-                            return (
-                              <button
-                                key={cat.value}
-                                onClick={() => !isReadOnly && updateActionCategory(action.id, cat.value)}
-                                disabled={isReadOnly}
-                                className={`p-2 rounded-lg border text-left transition-all ${
-                                  action.category === cat.value
-                                    ? "border-primary bg-primary/10"
-                                    : "border-border/50 hover:border-border bg-background/50"
-                                } ${isReadOnly ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <Icon className={`w-4 h-4 ${action.category === cat.value ? "text-primary" : "text-muted-foreground"}`} />
-                                  <span className={`text-xs font-medium ${action.category === cat.value ? "text-primary" : "text-foreground"}`}>
-                                    {cat.label}
-                                  </span>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Action Type Selection (based on category) */}
-                      {action.category && (
-                        <div className="mb-4">
-                          <Label className="text-xs text-muted-foreground mb-2 block">Action Type</Label>
-                          <Select
-                            value={action.type || ""}
-                            onValueChange={(value) => updateActionType(action.id, value)}
-                            disabled={isReadOnly}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select action type..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {actionTypesByCategory[action.category]?.map((opt) => (
-                                <SelectItem key={opt.value} value={opt.value}>
-                                  <div className="flex items-center gap-2">
-                                    <opt.icon className="w-4 h-4" />
-                                    {opt.label}
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-
-                      {/* Action Config Fields */}
-                      {renderActionFields(action)}
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={workflowState.actions.map(a => a.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="space-y-4">
+                      {workflowState.actions.map((action, idx) => (
+                        <SortableActionCard
+                          key={action.id}
+                          action={action}
+                          index={idx}
+                          isReadOnly={isReadOnly}
+                          onRemove={removeAction}
+                          onUpdateType={updateActionType}
+                          onUpdateConfig={updateActionConfig}
+                          onOpenTemplates={openTemplatesForReplace}
+                        />
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </SortableContext>
+                </DndContext>
               )}
             </AppCard>
 
@@ -1203,6 +867,21 @@ const WorkflowEdit = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modals */}
+      <ActionTemplateModal
+        open={templateModalOpen}
+        onClose={() => {
+          setTemplateModalOpen(false);
+          setReplaceActionId(null);
+        }}
+        onSelectTemplate={handleSelectTemplate}
+      />
+      <AIAssistPanel
+        open={aiAssistOpen}
+        onClose={() => setAiAssistOpen(false)}
+        onApply={handleAISuggestion}
+      />
     </AppShell>
   );
 };
