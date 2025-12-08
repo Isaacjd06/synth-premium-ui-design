@@ -5,7 +5,7 @@ import GoogleSignInButton from "./GoogleSignInButton";
 
 const CTASection = () => {
   return (
-    <section className="py-24 md:py-32 relative overflow-hidden">
+    <section className="py-16 md:py-20 relative overflow-hidden">
       {/* Blue radial glow */}
       <div className="absolute inset-0">
         <div 

@@ -42,7 +42,7 @@ const benefits = [
 
 const BenefitsSection = () => {
   return (
-    <section id="features" className="py-24 md:py-32 relative overflow-hidden">
+    <section id="features" className="py-16 md:py-20 relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-[#080808] to-[#0a0a0a]" />
       

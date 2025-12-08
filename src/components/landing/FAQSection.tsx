@@ -49,7 +49,7 @@ const FAQSection = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="contact" className="py-24 md:py-32 relative overflow-hidden">
+    <section id="contact" className="py-16 md:py-20 relative overflow-hidden">
       {/* Diagonal gradient background */}
       <div className="absolute inset-0 bg-[#0a0a0a]" />
       <div 

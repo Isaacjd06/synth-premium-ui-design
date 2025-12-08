@@ -30,7 +30,7 @@ const addons = [
 
 const AddOnsSection = () => {
   return (
-    <section className="py-24 md:py-32 relative overflow-hidden">
+    <section className="py-16 md:py-20 relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-[#0a0a0a]" />
 
