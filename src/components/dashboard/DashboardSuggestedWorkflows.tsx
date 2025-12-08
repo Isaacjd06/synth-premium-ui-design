@@ -11,13 +11,13 @@ const suggestions = [
 
 const DashboardSuggestedWorkflows = () => {
   return (
-    <Card className="bg-card border-border/50 p-5">
+    <Card className="bg-card border-border/50 p-5 h-full flex flex-col">
       <div className="flex items-center gap-2 mb-4">
         <Wand2 className="w-5 h-5 text-primary" />
         <h2 className="text-lg font-semibold text-foreground">Suggested New Workflows</h2>
         <span className="text-xs text-muted-foreground ml-auto">Based on your activity patterns</span>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 content-start">
         {suggestions.map((suggestion, index) => (
           <div key={index} className="p-4 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/30 transition-colors">
             <div className="flex items-start gap-3">

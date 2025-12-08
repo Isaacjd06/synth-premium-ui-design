@@ -24,12 +24,12 @@ const statusColors = {
 
 const DashboardActivityFeed = () => {
   return (
-    <Card className="bg-card border-border/50 p-5">
+    <Card className="bg-card border-border/50 p-5 h-full flex flex-col">
       <div className="flex items-center gap-2 mb-4">
         <Activity className="w-5 h-5 text-primary" />
         <h2 className="text-lg font-semibold text-foreground">Activity Feed</h2>
       </div>
-      <ScrollArea className="h-[300px]">
+      <ScrollArea className="flex-1 min-h-[300px]">
         <div className="space-y-2 pr-4">
           {activities.map((activity, index) => (
             <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">

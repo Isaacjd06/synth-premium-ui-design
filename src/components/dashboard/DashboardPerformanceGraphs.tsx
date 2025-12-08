@@ -111,100 +111,110 @@ const DashboardPerformanceGraphs = () => {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <Card className="bg-card border-border/50 p-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+      <Card className="bg-card border-border/50 p-4 h-full flex flex-col">
         <h3 className="text-sm font-medium text-foreground mb-3">Executions Over Time</h3>
-        <ResponsiveContainer width="100%" height={160}>
-          <AreaChart data={executionsData}>
-            <defs>
-              <linearGradient id="colorExec" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-            <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" fill="url(#colorExec)" />
-          </AreaChart>
-        </ResponsiveContainer>
+        <div className="flex-1 min-h-[160px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={executionsData}>
+              <defs>
+                <linearGradient id="colorExec" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+              <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" fill="url(#colorExec)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       </Card>
 
-      <Card className="bg-card border-border/50 p-4">
+      <Card className="bg-card border-border/50 p-4 h-full flex flex-col">
         <h3 className="text-sm font-medium text-foreground mb-3">Success vs Failure</h3>
-        <ResponsiveContainer width="100%" height={160}>
-          <BarChart data={successFailureData}>
-            <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-            <Bar dataKey="success" stackId="a" fill="#22c55e" radius={[2, 2, 0, 0]} />
-            <Bar dataKey="failure" stackId="a" fill="#ef4444" radius={[2, 2, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <div className="flex-1 min-h-[160px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={successFailureData}>
+              <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+              <Bar dataKey="success" stackId="a" fill="#22c55e" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="failure" stackId="a" fill="#ef4444" radius={[2, 2, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </Card>
 
-      <Card className="bg-card border-border/50 p-4">
+      <Card className="bg-card border-border/50 p-4 h-full flex flex-col">
         <h3 className="text-sm font-medium text-foreground mb-3">Trigger Activity by Hour</h3>
-        <ResponsiveContainer width="100%" height={160}>
-          <BarChart data={triggerActivityData}>
-            <XAxis dataKey="hour" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-            <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <div className="flex-1 min-h-[160px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={triggerActivityData}>
+              <XAxis dataKey="hour" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+              <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </Card>
 
       {/* Upgraded Action Usage Donut Chart */}
-      <Card className="bg-card border-border/50 p-4">
+      <Card className="bg-card border-border/50 p-4 h-full flex flex-col">
         <h3 className="text-sm font-medium text-foreground mb-3">Action Usage</h3>
-        <ResponsiveContainer width="100%" height={180}>
-          <PieChart margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
-            <Pie
-              data={actionUsageData}
-              cx="50%"
-              cy="50%"
-              innerRadius={45}
-              outerRadius={65}
-              dataKey="value"
-              label={renderCustomLabel}
-              labelLine={false}
-              activeIndex={activeIndex}
-              activeShape={renderActiveShape}
-              onMouseEnter={onPieEnter}
-              onMouseLeave={onPieLeave}
-              animationBegin={0}
-              animationDuration={400}
-              animationEasing="ease-out"
-            >
-              {actionUsageData.map((entry, index) => (
-                <Cell
-                  key={index}
-                  fill={entry.color}
-                  stroke="transparent"
-                  style={{
-                    opacity: activeIndex === undefined || activeIndex === index ? 1 : 0.4,
-                    transition: 'opacity 0.2s ease-out',
-                    cursor: 'pointer',
-                  }}
-                />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomDonutTooltip />} />
-          </PieChart>
-        </ResponsiveContainer>
+        <div className="flex-1 min-h-[180px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
+              <Pie
+                data={actionUsageData}
+                cx="50%"
+                cy="50%"
+                innerRadius={45}
+                outerRadius={65}
+                dataKey="value"
+                label={renderCustomLabel}
+                labelLine={false}
+                activeIndex={activeIndex}
+                activeShape={renderActiveShape}
+                onMouseEnter={onPieEnter}
+                onMouseLeave={onPieLeave}
+                animationBegin={0}
+                animationDuration={400}
+                animationEasing="ease-out"
+              >
+                {actionUsageData.map((entry, index) => (
+                  <Cell
+                    key={index}
+                    fill={entry.color}
+                    stroke="transparent"
+                    style={{
+                      opacity: activeIndex === undefined || activeIndex === index ? 1 : 0.4,
+                      transition: 'opacity 0.2s ease-out',
+                      cursor: 'pointer',
+                    }}
+                  />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomDonutTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </Card>
 
-      <Card className="bg-card border-border/50 p-4 md:col-span-2">
+      <Card className="bg-card border-border/50 p-4 md:col-span-2 h-full flex flex-col">
         <h3 className="text-sm font-medium text-foreground mb-3">Execution Duration Trend</h3>
-        <ResponsiveContainer width="100%" height={160}>
-          <LineChart data={durationData}>
-            <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} unit="s" />
-            <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-            <Line type="monotone" dataKey="duration" stroke="hsl(var(--accent))" strokeWidth={2} dot={{ fill: 'hsl(var(--accent))' }} />
-          </LineChart>
-        </ResponsiveContainer>
+        <div className="flex-1 min-h-[160px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={durationData}>
+              <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} unit="s" />
+              <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+              <Line type="monotone" dataKey="duration" stroke="hsl(var(--accent))" strokeWidth={2} dot={{ fill: 'hsl(var(--accent))' }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </Card>
     </div>
   );

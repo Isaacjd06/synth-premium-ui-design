@@ -22,7 +22,7 @@ const statusColors = {
 
 const DashboardSystemHealth = () => {
   return (
-    <Card className="bg-card border-border/50 p-5">
+    <Card className="bg-card border-border/50 p-5 h-full flex flex-col">
       <div className="flex items-center gap-2 mb-4">
         <Server className="w-5 h-5 text-primary" />
         <h2 className="text-lg font-semibold text-foreground">System Health</h2>
@@ -44,25 +44,27 @@ const DashboardSystemHealth = () => {
           </div>
         ))}
       </div>
-      {slowWorkflows.length > 0 && (
-        <div className="border-t border-border/50 pt-3">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="w-4 h-4 text-yellow-400" />
-            <span className="text-sm font-medium text-foreground">Slow Workflows</span>
-          </div>
-          <div className="space-y-2">
-            {slowWorkflows.map((wf, index) => (
-              <div key={index} className="flex items-center justify-between p-2 rounded bg-yellow-500/5 border border-yellow-500/20">
-                <span className="text-sm text-foreground">{wf.name}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-yellow-400">{wf.duration}</span>
-                  <span className="text-xs text-muted-foreground">{wf.warning}</span>
+      <div className="flex-1">
+        {slowWorkflows.length > 0 && (
+          <div className="border-t border-border/50 pt-3">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-4 h-4 text-yellow-400" />
+              <span className="text-sm font-medium text-foreground">Slow Workflows</span>
+            </div>
+            <div className="space-y-2">
+              {slowWorkflows.map((wf, index) => (
+                <div key={index} className="flex items-center justify-between p-2 rounded bg-yellow-500/5 border border-yellow-500/20">
+                  <span className="text-sm text-foreground">{wf.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-yellow-400">{wf.duration}</span>
+                    <span className="text-xs text-muted-foreground">{wf.warning}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </Card>
   );
 };

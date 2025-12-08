@@ -14,9 +14,9 @@ const kpiData = [
 
 const DashboardKPIBar = () => {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 items-stretch">
       {kpiData.map((kpi, index) => (
-        <Card key={index} className="bg-card border-border/50 p-4 hover:border-primary/30 transition-all">
+        <Card key={index} className="bg-card border-border/50 p-4 hover:border-primary/30 transition-all h-full flex flex-col justify-start">
           <p className="text-xs text-muted-foreground truncate">{kpi.title}</p>
           <p className="text-xl font-bold text-foreground mt-1 truncate">{kpi.value}</p>
           <div className={`flex items-center gap-1 mt-1 text-xs ${

@@ -41,22 +41,22 @@ const Dashboard = () => {
         </motion.div>
 
         {/* Section 3: AI Observations */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="h-full">
           <DashboardAIObservations />
         </motion.div>
 
         {/* Section 4 & 5: AI Recommendations and Predictions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="h-full">
             <DashboardAIRecommendations />
           </motion.div>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="h-full">
             <DashboardPredictions />
           </motion.div>
         </div>
 
         {/* Section 6: Integration Health */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="h-full">
           <DashboardIntegrationHealth />
         </motion.div>
 
@@ -66,37 +66,37 @@ const Dashboard = () => {
         </motion.div>
 
         {/* Section 8: Business Impact */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} className="h-full">
           <DashboardBusinessImpact />
         </motion.div>
 
         {/* Section 9 & 10: Activity Feed and Incident Insights */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="h-full">
             <DashboardActivityFeed />
           </motion.div>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="h-full">
             <DashboardIncidentInsights />
           </motion.div>
         </div>
 
         {/* Section 11: System Health */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }} className="h-full">
           <DashboardSystemHealth />
         </motion.div>
 
         {/* Section 12 & 13: User Behavior and AI Memory */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="h-full">
             <DashboardUserBehavior />
           </motion.div>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="h-full">
             <DashboardAIMemory />
           </motion.div>
         </div>
 
         {/* Section 14: Suggested Workflows */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }} className="h-full">
           <DashboardSuggestedWorkflows />
         </motion.div>
       </div>
