@@ -1,323 +1,176 @@
 import { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Send, Copy, Check, ChevronDown, ChevronUp, Filter, X, Loader2 } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
+import ChatMessage, { ChatMessageProps } from "@/components/chat/ChatMessage";
+import ChatInput from "@/components/chat/ChatInput";
+import ChatSidebar from "@/components/chat/ChatSidebar";
+import TypingIndicator from "@/components/chat/TypingIndicator";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
-const SYSTEM_USER_ID = "00000000-0000-0000-0000-000000000000";
-
-interface Message {
-  id: string;
-  role: "user" | "assistant" | "system";
-  content: string;
-  timestamp: string;
-  conversation_id?: string;
-  metadata?: Record<string, unknown>;
-}
-
-// Mock messages for skeleton
-const mockMessages: Message[] = [
+// Placeholder messages demonstrating different message types
+const placeholderMessages: ChatMessageProps[] = [
   {
     id: "1",
     role: "system",
     content: "Welcome to Synth. I'm here to help you build and manage your automation workflows.",
     timestamp: "10:00 AM",
-    conversation_id: "conv_main",
   },
   {
     id: "2",
     role: "user",
-    content: "I want to create a workflow that sends a Slack notification when I get a new lead in my CRM.",
+    content: "Create an automation that sends me a Slack message when a Stripe payment succeeds.",
     timestamp: "10:01 AM",
-    conversation_id: "conv_main",
   },
   {
     id: "3",
     role: "assistant",
-    content: "I can help you set that up! I'll create a workflow that triggers when a new lead is added to your CRM and sends a notification to your Slack channel. Would you like me to proceed with the default configuration, or would you like to customize the notification message?",
+    content: "I can build that workflow for you! Here's what I'm proposing:",
     timestamp: "10:01 AM",
-    conversation_id: "conv_main",
+    workflowSteps: [
+      { step: 1, title: "Stripe Webhook Trigger", description: "Listen for payment_intent.succeeded events" },
+      { step: 2, title: "Extract Payment Data", description: "Parse customer email, amount, and invoice ID" },
+      { step: 3, title: "Send Slack Notification", description: "Post formatted message to #payments channel" },
+    ],
+    actions: [
+      { label: "Create Workflow" },
+      { label: "Customize Steps" },
+      { label: "Preview Message" },
+    ],
     metadata: { plan: "workflow_generation", confidence: 0.95 },
   },
   {
     id: "4",
     role: "user",
-    content: "How do I connect my Gmail account?",
-    timestamp: "11:30 AM",
-    conversation_id: "conv_support",
+    content: "Show me how the Slack message will look",
+    timestamp: "10:02 AM",
   },
   {
     id: "5",
     role: "assistant",
-    content: "To connect your Gmail account, go to Connections in the sidebar and click 'Add Connection'. Select Gmail from the list and follow the OAuth flow to authorize access.",
-    timestamp: "11:31 AM",
-    conversation_id: "conv_support",
+    content: "Here's a preview of the Slack notification format:",
+    timestamp: "10:02 AM",
+    codeBlock: {
+      language: "json",
+      code: `{
+  "channel": "#payments",
+  "blocks": [
+    {
+      "type": "header",
+      "text": "💰 New Payment Received"
+    },
+    {
+      "type": "section",
+      "fields": [
+        { "type": "mrkdwn", "text": "*Amount:* $99.00" },
+        { "type": "mrkdwn", "text": "*Customer:* john@example.com" }
+      ]
+    }
+  ]
+}`,
+    },
+    actions: [
+      { label: "Use This Format" },
+      { label: "Edit Template" },
+    ],
+  },
+  {
+    id: "6",
+    role: "system",
+    content: "Tip: You can say \"generate workflow\" at any time to start building a new automation.",
+    timestamp: "10:03 AM",
   },
 ];
 
-const TypingIndicator = () => (
-  <div className="flex items-center gap-2 px-4 py-3">
-    <div className="flex items-center gap-1">
-      {[0, 1, 2].map((i) => (
-        <motion.div
-          key={i}
-          className="w-2 h-2 rounded-full bg-muted-foreground"
-          animate={{ y: [0, -6, 0], opacity: [0.4, 1, 0.4] }}
-          transition={{
-            duration: 0.6,
-            repeat: Infinity,
-            delay: i * 0.2,
-          }}
-        />
-      ))}
-    </div>
-    <span className="text-sm text-muted-foreground">Synth is thinking...</span>
-  </div>
-);
-
 const Chat = () => {
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
-  const [input, setInput] = useState("");
-  const [isSending, setIsSending] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [conversationFilter, setConversationFilter] = useState("");
-  const [showFilter, setShowFilter] = useState(false);
+  const [messages, setMessages] = useState<ChatMessageProps[]>(placeholderMessages);
+  const [isLoading, setIsLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Get unique conversation IDs
-  const conversationIds = Array.from(new Set(messages.map(m => m.conversation_id).filter(Boolean))) as string[];
-
-  // Filter messages by conversation
-  const filteredMessages = conversationFilter
-    ? messages.filter(m => m.conversation_id === conversationFilter)
-    : messages;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [filteredMessages]);
+  }, [messages]);
 
-  const handleCopy = (content: string, id: string) => {
-    navigator.clipboard.writeText(content);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isSending) return;
-
-    const newMessage: Message = {
+  const handleSendMessage = async (content: string) => {
+    const userMessage: ChatMessageProps = {
       id: crypto.randomUUID(),
       role: "user",
-      content: input.trim(),
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      conversation_id: conversationFilter || "conv_main",
+      content,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
-    setMessages(prev => [...prev, newMessage]);
-    setInput("");
-    setIsSending(true);
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(r => setTimeout(r, 1500));
+    // Simulate AI response
+    await new Promise((r) => setTimeout(r, 1500));
 
-    const responseMessage: Message = {
+    const assistantMessage: ChatMessageProps = {
       id: crypto.randomUUID(),
       role: "assistant",
-      content: "I understand your request. Let me help you with that. This is a simulated response for the UI demonstration.",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      conversation_id: conversationFilter || "conv_main",
-      metadata: { processed: true },
+      content: "I understand your request. Let me help you with that. This is a simulated response for the UI demonstration. In production, this would be connected to the AI backend.",
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      actions: [
+        { label: "Learn More" },
+        { label: "Try Another" },
+      ],
     };
 
-    setMessages(prev => [...prev, responseMessage]);
-    setIsSending(false);
-    toast.success("Message sent successfully");
+    setMessages((prev) => [...prev, assistantMessage]);
+    setIsLoading(false);
   };
 
   return (
     <AppShell>
       <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden">
-        {/* Header with filter */}
-        <div className="border-b border-border bg-background px-4 lg:px-6 py-3 flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-foreground">Chat</h1>
-          <div className="flex items-center gap-2">
-            {conversationFilter && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                {conversationFilter}
-                <button onClick={() => setConversationFilter("")} className="ml-1 hover:text-destructive">
-                  <X className="w-3 h-3" />
-                </button>
-              </Badge>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowFilter(!showFilter)}
-              className={cn(showFilter && "bg-muted")}
-            >
-              <Filter className="w-4 h-4 mr-1" />
-              Filter
-            </Button>
-          </div>
-        </div>
-
-        {/* Filter dropdown */}
-        {showFilter && (
-          <div className="border-b border-border bg-muted/50 px-4 lg:px-6 py-3">
-            <div className="flex items-center gap-3 max-w-md">
-              <label className="text-sm text-muted-foreground whitespace-nowrap">Conversation:</label>
-              <Input
-                placeholder="Enter conversation ID or select..."
-                value={conversationFilter}
-                onChange={(e) => setConversationFilter(e.target.value)}
-                className="flex-1"
-              />
-            </div>
-            {conversationIds.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                <Button variant="outline" size="sm" onClick={() => setConversationFilter("")}>
-                  All
-                </Button>
-                {conversationIds.map(id => (
-                  <Button
-                    key={id}
-                    variant={conversationFilter === id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setConversationFilter(id)}
-                  >
-                    {id}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4">
-          {filteredMessages.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-muted-foreground">
-                {conversationFilter ? `No messages in conversation "${conversationFilter}"` : "No messages yet. Start a conversation!"}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4 max-w-4xl mx-auto">
-              {filteredMessages.map((message, index) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className={cn(
-                    "flex",
-                    message.role === "user" && "justify-end",
-                    message.role === "system" && "justify-center"
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "max-w-[85%] sm:max-w-[75%] lg:max-w-[70%] rounded-lg px-4 py-3 group relative",
-                      message.role === "user" && "bg-primary text-primary-foreground",
-                      message.role === "assistant" && "bg-muted text-foreground",
-                      message.role === "system" && "bg-card/50 text-muted-foreground border border-border text-center"
-                    )}
-                  >
-                    <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                    
-                    {/* Timestamp & conversation */}
-                    <div className={cn(
-                      "text-xs mt-2 flex items-center gap-2",
-                      message.role === "user" ? "text-primary-foreground/60" : "text-muted-foreground"
-                    )}>
-                      <span>{message.timestamp}</span>
-                      {message.conversation_id && (
-                        <Badge variant="outline" className="text-[10px] py-0 px-1">
-                          {message.conversation_id}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Copy button (hover) */}
-                    {message.role !== "system" && (
-                      <button
-                        onClick={() => handleCopy(message.content, message.id)}
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-background/20"
-                      >
-                        {copiedId === message.id ? (
-                          <Check className="w-3 h-3" />
-                        ) : (
-                          <Copy className="w-3 h-3" />
-                        )}
-                      </button>
-                    )}
-
-                    {/* Metadata expand */}
-                    {message.metadata && (
-                      <div className="mt-2">
-                        <button
-                          onClick={() => setExpandedId(expandedId === message.id ? null : message.id)}
-                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          {expandedId === message.id ? (
-                            <ChevronUp className="w-3 h-3" />
-                          ) : (
-                            <ChevronDown className="w-3 h-3" />
-                          )}
-                          Metadata
-                        </button>
-                        {expandedId === message.id && (
-                          <motion.pre
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="mt-2 text-xs bg-background/40 p-2 rounded overflow-x-auto"
-                          >
-                            {JSON.stringify(message.metadata, null, 2)}
-                          </motion.pre>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-              {isSending && <TypingIndicator />}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
-        </div>
-
-        {/* Composer */}
-        <div className="border-t border-border bg-background px-4 lg:px-6 py-4">
-          <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-            <div className="flex items-end gap-3">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Type your message... (Shift+Enter for newline)"
-                rows={1}
-                disabled={isSending}
-                className="flex-1 min-h-[52px] max-h-[200px] px-4 py-3 rounded-lg bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none disabled:opacity-50"
-                style={{ overflowY: input.split("\n").length > 3 ? "auto" : "hidden" }}
-              />
-              <button
-                type="submit"
-                disabled={!input.trim() || isSending}
-                className="p-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground text-center mt-2">
-              Press Enter to send, Shift+Enter for newline
+        {/* Header */}
+        <div className="border-b border-border/50 bg-background px-4 lg:px-6 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Chat</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Talk to Synth to build automations and get intelligent guidance.
             </p>
-          </form>
+          </div>
+
+          {/* Mobile sidebar toggle */}
+          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="lg:hidden">
+                <Menu className="w-5 h-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-80 p-0 bg-background border-border">
+              <ChatSidebar />
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Main content area */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Chat window - Left column */}
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Messages */}
+            <ScrollArea className="flex-1 px-4 lg:px-6">
+              <div className="max-w-3xl mx-auto py-6 space-y-4">
+                {messages.map((message) => (
+                  <ChatMessage key={message.id} {...message} />
+                ))}
+                {isLoading && <TypingIndicator />}
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
+
+            {/* Input */}
+            <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
+          </div>
+
+          {/* Context Sidebar - Right column (desktop only) */}
+          <div className="hidden lg:block w-80 border-l border-border/50 bg-card/30">
+            <ChatSidebar />
+          </div>
         </div>
       </div>
     </AppShell>
