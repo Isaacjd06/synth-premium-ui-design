@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   DndContext, 
   closestCenter,
@@ -26,16 +26,21 @@ import {
   Webhook,
   Clock,
   Hand,
-  Zap,
   Plus,
   Trash2,
   GripVertical,
   LayoutTemplate,
-  Calendar,
-  MessageSquare,
-  Mail,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Save,
+  Link2,
+  Wand2,
+  Code2,
+  Settings2,
+  ArrowRight,
+  RotateCcw
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import AppCard from "@/components/app/AppCard";
@@ -47,25 +52,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { ActionTemplateModal, actionTemplates, type ActionTemplate } from "@/components/workflows/ActionTemplateModal";
 import { ActionFieldsRenderer } from "@/components/workflows/ActionFieldsRenderer";
-
-// Trigger type options for Basic mode
-const triggerTypeOptions = [
-  { value: "webhook", label: "Webhook", description: "Runs when you send data to this webhook URL", icon: Webhook },
-  { value: "schedule", label: "Schedule", description: "Runs on a set schedule", icon: Clock },
-  { value: "manual", label: "Manual", description: "Runs when triggered manually", icon: Hand },
-  { value: "event", label: "App Event", description: "Runs when a specific event occurs", icon: Zap },
-];
+import { WorkflowSummaryCard } from "@/components/workflows/WorkflowSummaryCard";
 
 // Types
-type TriggerType = "webhook" | "schedule" | "manual" | "event";
+type TriggerType = "webhook" | "cron" | "manual";
 
 interface Action {
   id: string;
   type: string;
   config: Record<string, unknown>;
+  onSuccessNext?: string[];
+  onFailureNext?: string[];
 }
 
 interface Trigger {
@@ -81,30 +83,152 @@ interface WorkflowState {
   actions: Action[];
 }
 
+// Trigger options
+const triggerOptions = [
+  { value: "webhook" as const, label: "Webhook", description: "Runs when data is sent to a URL", icon: Webhook },
+  { value: "cron" as const, label: "Scheduled", description: "Runs on a schedule (cron)", icon: Clock },
+  { value: "manual" as const, label: "Manual", description: "Runs when triggered manually", icon: Hand },
+];
+
 // Get action label from type
 const getActionLabel = (type: string): string => {
   const template = actionTemplates.find(t => t.type === type);
   return template?.label || type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
+// Determine required connections based on action types
+const getRequiredConnections = (actions: Action[]): string[] => {
+  const connections: Set<string> = new Set();
+  actions.forEach(action => {
+    if (action.type === "send_email") connections.add("Email");
+    if (action.type === "slack_message") connections.add("Slack");
+    if (action.type === "send_sms") connections.add("SMS/Twilio");
+    if (action.type === "crm_create") {
+      const crm = action.config.crm as string;
+      if (crm) connections.add(crm.charAt(0).toUpperCase() + crm.slice(1));
+    }
+    if (action.type === "notion_create") connections.add("Notion");
+    if (action.type === "append_sheet") connections.add("Google Sheets");
+  });
+  return Array.from(connections);
+};
+
+// Comprehensive validation
+const validateWorkflow = (state: WorkflowState): string[] => {
+  const errors: string[] = [];
+  
+  // Basic info validation
+  if (!state.name.trim()) errors.push("Workflow name is required");
+  
+  // Trigger validation
+  if (!state.trigger.type) {
+    errors.push("Trigger type is required");
+  } else if (state.trigger.type === "webhook") {
+    const path = state.trigger.config?.path as string;
+    if (!path?.trim()) errors.push("Webhook path is required");
+    else if (!path.startsWith("/")) errors.push("Webhook path must start with /");
+  } else if (state.trigger.type === "cron") {
+    const mode = state.trigger.config?.mode as string;
+    if (mode === "expression") {
+      const expr = state.trigger.config?.expression as string;
+      if (!expr?.trim()) errors.push("Cron expression is required");
+      else {
+        const parts = expr.trim().split(/\s+/);
+        if (parts.length < 5) errors.push("Invalid cron expression format");
+      }
+    } else {
+      const amount = state.trigger.config?.intervalAmount as number;
+      if (!amount || amount < 1) errors.push("Interval amount must be at least 1");
+    }
+  }
+  
+  // Actions validation
+  if (state.actions.length === 0) {
+    errors.push("At least one action is required");
+  } else {
+    const actionIds = state.actions.map(a => a.id);
+    const uniqueIds = new Set(actionIds);
+    if (uniqueIds.size !== actionIds.length) {
+      errors.push("Action IDs must be unique");
+    }
+    
+    state.actions.forEach((action, idx) => {
+      if (!action.type) {
+        errors.push(`Action ${idx + 1} has no type selected`);
+      } else {
+        // Type-specific validation
+        if (action.type === "http_request") {
+          const url = action.config.url as string;
+          if (!url?.trim()) errors.push(`Action ${idx + 1}: URL is required`);
+          else if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            errors.push(`Action ${idx + 1}: URL must start with http:// or https://`);
+          }
+        }
+        if (action.type === "send_email") {
+          const to = action.config.to as string;
+          if (!to?.trim()) errors.push(`Action ${idx + 1}: Email recipient is required`);
+        }
+        if (action.type === "delay") {
+          const duration = action.config.duration as number;
+          if (!duration || duration < 1) errors.push(`Action ${idx + 1}: Delay duration must be at least 1`);
+        }
+      }
+      
+      // Flow validation - check references exist
+      if (action.onSuccessNext) {
+        action.onSuccessNext.forEach(nextId => {
+          if (!actionIds.includes(nextId)) {
+            errors.push(`Action ${idx + 1}: References non-existent action "${nextId}"`);
+          }
+        });
+      }
+      if (action.onFailureNext) {
+        action.onFailureNext.forEach(nextId => {
+          if (!actionIds.includes(nextId)) {
+            errors.push(`Action ${idx + 1}: Failure path references non-existent action "${nextId}"`);
+          }
+        });
+      }
+    });
+    
+    // Check for starting actions
+    const targetedIds = new Set<string>();
+    state.actions.forEach(a => {
+      a.onSuccessNext?.forEach(id => targetedIds.add(id));
+      a.onFailureNext?.forEach(id => targetedIds.add(id));
+    });
+    const startingActions = state.actions.filter(a => !targetedIds.has(a.id));
+    if (startingActions.length === 0 && state.actions.length > 0) {
+      errors.push("No starting action found (circular reference detected)");
+    }
+  }
+  
+  return errors;
+};
+
 // Sortable Action Card Component
 interface SortableActionCardProps {
   action: Action;
   index: number;
+  allActions: Action[];
   onRemove: (id: string) => void;
   onUpdateType: (id: string, type: string) => void;
   onUpdateConfig: (id: string, field: string, value: unknown) => void;
+  onUpdateFlow: (id: string, field: "onSuccessNext" | "onFailureNext", value: string[]) => void;
   onOpenTemplates: (replaceId: string) => void;
 }
 
 function SortableActionCard({ 
   action, 
   index, 
+  allActions,
   onRemove, 
   onUpdateType,
   onUpdateConfig,
+  onUpdateFlow,
   onOpenTemplates 
 }: SortableActionCardProps) {
+  const [showFlow, setShowFlow] = useState(false);
   const {
     attributes,
     listeners,
@@ -119,6 +243,11 @@ function SortableActionCard({
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
+
+  const otherActions = allActions.filter(a => a.id !== action.id);
+  const isStartingAction = !allActions.some(a => 
+    a.onSuccessNext?.includes(action.id) || a.onFailureNext?.includes(action.id)
+  );
 
   return (
     <div
@@ -141,8 +270,21 @@ function SortableActionCard({
           <span className="text-sm font-medium text-foreground">
             {action.type ? getActionLabel(action.type) : "New Action"}
           </span>
+          {isStartingAction && (
+            <Badge variant="outline" className="text-[10px] bg-green-400/10 text-green-400 border-green-400/30">
+              START
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowFlow(!showFlow)}
+            className="text-muted-foreground hover:text-primary"
+          >
+            <ArrowRight className="w-4 h-4" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -173,443 +315,290 @@ function SortableActionCard({
               <SelectValue placeholder="Choose an action..." />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="http_request">HTTP Request</SelectItem>
+              <SelectItem value="set_data">Set Data</SelectItem>
               <SelectItem value="send_email">Send Email</SelectItem>
-              <SelectItem value="slack_message">Send Slack Message</SelectItem>
+              <SelectItem value="delay">Delay</SelectItem>
+              <SelectItem value="slack_message">Slack Message</SelectItem>
               <SelectItem value="send_sms">Send SMS</SelectItem>
-              <SelectItem value="database_insert">Insert Database Record</SelectItem>
-              <SelectItem value="database_update">Update Database Record</SelectItem>
-              <SelectItem value="append_sheet">Append to Spreadsheet</SelectItem>
+              <SelectItem value="database_insert">Insert Record</SelectItem>
+              <SelectItem value="database_update">Update Record</SelectItem>
               <SelectItem value="crm_create">Create CRM Contact</SelectItem>
               <SelectItem value="notion_create">Create Notion Page</SelectItem>
-              <SelectItem value="http_request">HTTP API Request</SelectItem>
-              <SelectItem value="delay">Delay</SelectItem>
-              <SelectItem value="branch">Condition / Branch</SelectItem>
-              <SelectItem value="transform">Transform Text</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground mt-2">
-            Or use the template icon above to browse all options.
-          </p>
         </div>
       )}
 
-      <ActionFieldsRenderer
-        actionId={action.id}
-        actionType={action.type}
-        config={action.config}
-        isReadOnly={false}
-        onUpdateConfig={onUpdateConfig}
-      />
+      {action.type && (
+        <ActionFieldsRenderer
+          actionId={action.id}
+          actionType={action.type}
+          config={action.config}
+          isReadOnly={false}
+          onUpdateConfig={onUpdateConfig}
+        />
+      )}
+
+      {/* Flow Configuration */}
+      <AnimatePresence>
+        {showFlow && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="mt-4 pt-4 border-t border-border/30 space-y-3"
+          >
+            <p className="text-xs font-medium text-muted-foreground">Flow Configuration</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">On Success → Next Action(s)</Label>
+                <Select
+                  value={action.onSuccessNext?.[0] || "none"}
+                  onValueChange={(v) => onUpdateFlow(action.id, "onSuccessNext", v === "none" ? [] : [v])}
+                >
+                  <SelectTrigger className="text-xs">
+                    <SelectValue placeholder="Select next..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">End (no next action)</SelectItem>
+                    {otherActions.map(a => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {getActionLabel(a.type) || a.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">On Failure → (Optional)</Label>
+                <Select
+                  value={action.onFailureNext?.[0] || "none"}
+                  onValueChange={(v) => onUpdateFlow(action.id, "onFailureNext", v === "none" ? [] : [v])}
+                >
+                  <SelectTrigger className="text-xs">
+                    <SelectValue placeholder="Select..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Stop on failure</SelectItem>
+                    {otherActions.map(a => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {getActionLabel(a.type) || a.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-// AI Creation Modal Component
-interface AICreationModalProps {
+// AI Builder Modal
+interface AIBuilderModalProps {
   open: boolean;
   onClose: () => void;
-  onApply: (data: { name: string; description: string; intent: string; trigger: Trigger; actions: Action[] }) => void;
+  onApply: (workflow: Partial<WorkflowState>) => void;
 }
 
-function AICreationModal({ open, onClose, onApply }: AICreationModalProps) {
-  const [description, setDescription] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [suggestion, setSuggestion] = useState<{
-    name: string;
-    description: string;
-    intent: string;
-    trigger: Trigger;
-    actions: Action[];
-  } | null>(null);
+function AIBuilderModal({ open, onClose, onApply }: AIBuilderModalProps) {
+  const [prompt, setPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [suggestion, setSuggestion] = useState<Partial<WorkflowState> | null>(null);
 
   const handleGenerate = async () => {
-    if (!description.trim()) return;
+    if (!prompt.trim()) return;
+    setIsGenerating(true);
+    await new Promise(r => setTimeout(r, 1500));
     
-    setIsProcessing(true);
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    
-    const lowerDesc = description.toLowerCase();
-    
-    // Generate workflow based on description
-    let generatedWorkflow: {
-      name: string;
-      description: string;
-      intent: string;
-      trigger: Trigger;
-      actions: Action[];
-    } = {
-      name: "New Workflow",
-      description: description,
-      intent: "",
-      trigger: { type: "webhook", config: { path: "/webhook" } },
-      actions: []
-    };
+    const lowerPrompt = prompt.toLowerCase();
+    let generated: Partial<WorkflowState>;
 
-    if (lowerDesc.includes("email") && lowerDesc.includes("signup")) {
-      generatedWorkflow = {
-        name: "Welcome Email on Signup",
+    if (lowerPrompt.includes("welcome") && lowerPrompt.includes("email")) {
+      generated = {
+        name: "Welcome Email Workflow",
         description: "Sends a welcome email when a new user signs up",
-        intent: "Greet new users and provide onboarding information",
-        trigger: { type: "webhook" as TriggerType, config: { path: "/new-signup", method: "POST" } },
+        intent: "Onboard new users with personalized welcome",
+        trigger: { type: "webhook", config: { path: "/webhook/signup", method: "POST" } },
         actions: [
-          { id: `action_${Date.now()}`, type: "send_email", config: { to: "{{user.email}}", subject: "Welcome!", body: "Hi {{user.name}}, welcome to our platform!" } }
+          { id: `action_${Date.now()}`, type: "send_email", config: { to: "{{user.email}}", subject: "Welcome!", body: "Hi {{user.name}}!" }, onSuccessNext: [] }
         ]
       };
-    } else if (lowerDesc.includes("slack") && lowerDesc.includes("payment")) {
-      generatedWorkflow = {
-        name: "Slack Alert on Payment Failure",
-        description: "Notifies the team on Slack when a payment fails",
-        intent: "Keep team informed of failed payments for quick resolution",
-        trigger: { type: "event" as TriggerType, config: { app: "stripe", event: "payment.failed" } },
+    } else if (lowerPrompt.includes("daily") || lowerPrompt.includes("schedule")) {
+      generated = {
+        name: "Daily Report Workflow",
+        description: "Sends a daily summary report",
+        intent: "Automate daily reporting",
+        trigger: { type: "cron", config: { mode: "expression", expression: "0 9 * * *" } },
         actions: [
-          { id: `action_${Date.now()}`, type: "slack_message", config: { channel: "#payments", message: "⚠️ Payment failed for {{customer.email}}", includeAttachments: true } }
+          { id: `action_${Date.now()}`, type: "slack_message", config: { channel: "#general", message: "📊 Daily Report" }, onSuccessNext: [] }
         ]
       };
-    } else if (lowerDesc.includes("crm") && lowerDesc.includes("upgrade")) {
-      generatedWorkflow = {
-        name: "Log User Upgrade to CRM",
-        description: "Creates a CRM record when a user upgrades their plan",
-        intent: "Track customer upgrades for sales follow-up",
-        trigger: { type: "event" as TriggerType, config: { app: "billing", event: "plan.upgraded" } },
+    } else if (lowerPrompt.includes("payment") && lowerPrompt.includes("fail")) {
+      const emailId = `action_${Date.now()}`;
+      const crmId = `action_${Date.now() + 1}`;
+      generated = {
+        name: "Payment Failure Handler",
+        description: "Notifies customer and logs failed payments",
+        intent: "Handle payment failures gracefully",
+        trigger: { type: "webhook", config: { path: "/webhook/payment-failed", method: "POST" } },
         actions: [
-          { id: `action_${Date.now()}`, type: "crm_create", config: { crm: "hubspot", firstName: "{{user.firstName}}", lastName: "{{user.lastName}}", email: "{{user.email}}", phone: "", customFields: [] } }
-        ]
-      };
-    } else if (lowerDesc.includes("daily") || lowerDesc.includes("schedule")) {
-      generatedWorkflow = {
-        name: "Daily Report",
-        description: "Generates and sends a daily report",
-        intent: "Automate daily reporting tasks",
-        trigger: { type: "schedule" as TriggerType, config: { frequency: "daily", time: "09:00" } },
-        actions: [
-          { id: `action_${Date.now()}`, type: "send_email", config: { to: "team@company.com", subject: "Daily Report - {{date}}", body: "Here's your daily report..." } }
+          { id: emailId, type: "send_email", config: { to: "{{customer.email}}", subject: "Payment Issue", body: "..." }, onSuccessNext: [crmId] },
+          { id: crmId, type: "crm_create", config: { crm: "hubspot", firstName: "{{customer.firstName}}", lastName: "{{customer.lastName}}", email: "{{customer.email}}" }, onSuccessNext: [] }
         ]
       };
     } else {
-      generatedWorkflow = {
+      generated = {
         name: "Custom Workflow",
-        description: description,
-        intent: "Automate tasks based on your description",
-        trigger: { type: "webhook" as TriggerType, config: { path: "/custom-hook" } },
+        description: prompt,
+        intent: "Automate custom task",
+        trigger: { type: "webhook", config: { path: "/webhook/custom", method: "POST" } },
         actions: [
-          { id: `action_${Date.now()}`, type: "send_email", config: { to: "{{user.email}}", subject: "", body: "" } }
+          { id: `action_${Date.now()}`, type: "http_request", config: { method: "POST", url: "https://api.example.com", headers: [], body: "{}" }, onSuccessNext: [] }
         ]
       };
     }
 
-    setSuggestion(generatedWorkflow);
-    setIsProcessing(false);
+    setSuggestion(generated);
+    setIsGenerating(false);
   };
 
   const handleApply = () => {
     if (suggestion) {
       onApply(suggestion);
-      handleClose();
+      setPrompt("");
+      setSuggestion(null);
+      onClose();
     }
   };
 
-  const handleClose = () => {
-    setDescription("");
-    setSuggestion(null);
-    onClose();
-  };
-
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            AI-Assisted Workflow Creation
+            AI Workflow Builder
           </DialogTitle>
         </DialogHeader>
-
         <div className="space-y-4">
           <div>
             <Label className="text-sm text-muted-foreground mb-2 block">
-              Describe the workflow you want to build:
+              Describe the workflow you want to create:
             </Label>
             <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g., Send a welcome email when a new user signs up, then log them in my CRM"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="e.g., Send a welcome email when a new user signs up, then add them to HubSpot"
               className="min-h-[100px]"
             />
           </div>
-
-          <Button 
-            onClick={handleGenerate} 
-            disabled={!description.trim() || isProcessing}
-            className="w-full"
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating Workflow...
-              </>
+          <Button onClick={handleGenerate} disabled={!prompt.trim() || isGenerating} className="w-full">
+            {isGenerating ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating...</>
             ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate Suggestions
-              </>
+              <><Wand2 className="w-4 h-4 mr-2" />Generate Workflow</>
             )}
           </Button>
-
           {suggestion && (
             <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-3">
-              <div>
-                <span className="text-xs text-muted-foreground">Suggested Name:</span>
-                <p className="text-sm font-medium text-foreground">{suggestion.name}</p>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground">{suggestion.name}</span>
+                <Badge variant="outline" className="text-primary border-primary/30">AI Generated</Badge>
               </div>
-              <div>
-                <span className="text-xs text-muted-foreground">Trigger:</span>
-                <p className="text-sm text-foreground capitalize">{suggestion.trigger.type}</p>
-              </div>
-              <div>
-                <span className="text-xs text-muted-foreground">Actions ({suggestion.actions.length}):</span>
-                <ul className="text-sm text-foreground mt-1">
-                  {suggestion.actions.map((action, i) => (
-                    <li key={i} className="flex items-center gap-2">
-                      <span className="w-4 h-4 rounded-full bg-primary/20 text-xs flex items-center justify-center text-primary">{i + 1}</span>
-                      {getActionLabel(action.type)}
-                    </li>
-                  ))}
-                </ul>
+              <p className="text-xs text-muted-foreground">{suggestion.intent}</p>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="p-2 rounded bg-muted/30">
+                  <span className="text-muted-foreground">Trigger:</span>
+                  <p className="text-foreground capitalize">{suggestion.trigger?.type}</p>
+                </div>
+                <div className="p-2 rounded bg-muted/30">
+                  <span className="text-muted-foreground">Actions:</span>
+                  <p className="text-foreground">{suggestion.actions?.length} step(s)</p>
+                </div>
               </div>
             </div>
           )}
         </div>
-
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleApply} disabled={!suggestion}>
-            Apply Suggestions
-          </Button>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleApply} disabled={!suggestion}>Apply Workflow</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-// AI JSON Builder Modal
-interface AIJsonBuilderModalProps {
-  open: boolean;
-  onClose: () => void;
-  onApply: (trigger: Trigger, actions: Action[]) => void;
-}
-
-function AIJsonBuilderModal({ open, onClose, onApply }: AIJsonBuilderModalProps) {
-  const [description, setDescription] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [generatedJson, setGeneratedJson] = useState<{ trigger: Trigger; actions: Action[] } | null>(null);
-
-  const handleGenerate = async () => {
-    if (!description.trim()) return;
-    
-    setIsProcessing(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const lowerDesc = description.toLowerCase();
-    
-    let trigger: Trigger = { type: "webhook", config: { path: "/webhook" } };
-    let actions: Action[] = [];
-
-    if (lowerDesc.includes("email") && lowerDesc.includes("crm")) {
-      trigger = { type: "webhook", config: { path: "/new-lead", method: "POST" } };
-      actions = [
-        { id: `action_${Date.now()}`, type: "send_email", config: { to: "{{user.email}}", subject: "Welcome!", body: "Thanks for signing up!" } },
-        { id: `action_${Date.now() + 1}`, type: "crm_create", config: { crm: "hubspot", firstName: "{{user.firstName}}", lastName: "{{user.lastName}}", email: "{{user.email}}", phone: "", customFields: [] } }
-      ];
-    } else if (lowerDesc.includes("slack")) {
-      trigger = { type: "event", config: { app: "system", event: "alert" } };
-      actions = [
-        { id: `action_${Date.now()}`, type: "slack_message", config: { channel: "#alerts", message: "{{event.message}}", includeAttachments: false } }
-      ];
-    } else {
-      trigger = { type: "webhook", config: { path: "/custom" } };
-      actions = [
-        { id: `action_${Date.now()}`, type: "send_email", config: { to: "{{user.email}}", subject: "", body: "" } }
-      ];
-    }
-
-    setGeneratedJson({ trigger, actions });
-    setIsProcessing(false);
-  };
-
-  const handleApply = () => {
-    if (generatedJson) {
-      onApply(generatedJson.trigger, generatedJson.actions);
-      handleClose();
-    }
-  };
-
-  const handleClose = () => {
-    setDescription("");
-    setGeneratedJson(null);
-    onClose();
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
-            AI JSON Builder
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          <div>
-            <Label className="text-sm text-muted-foreground mb-2 block">
-              Describe your workflow:
-            </Label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g., Send an email then log a CRM record"
-              className="min-h-[80px]"
-            />
-          </div>
-
-          <Button 
-            onClick={handleGenerate} 
-            disabled={!description.trim() || isProcessing}
-            className="w-full"
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating JSON...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate JSON
-              </>
-            )}
-          </Button>
-
-          {generatedJson && (
-            <div className="space-y-3">
-              <div>
-                <span className="text-xs text-muted-foreground">Trigger JSON:</span>
-                <pre className="mt-1 p-2 rounded bg-background/50 text-xs font-mono overflow-x-auto border border-border/30">
-                  {JSON.stringify(generatedJson.trigger, null, 2)}
-                </pre>
-              </div>
-              <div>
-                <span className="text-xs text-muted-foreground">Actions JSON:</span>
-                <pre className="mt-1 p-2 rounded bg-background/50 text-xs font-mono overflow-x-auto border border-border/30 max-h-[200px]">
-                  {JSON.stringify(generatedJson.actions, null, 2)}
-                </pre>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleApply} disabled={!generatedJson}>
-            Apply JSON
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// Validation helper
-const validateWorkflow = (state: WorkflowState): string[] => {
-  const errors: string[] = [];
-  if (!state.name.trim()) errors.push("Workflow name is required");
-  if (!state.trigger.type) errors.push("Trigger type is required");
-  if (state.actions.length === 0) errors.push("At least one action is required");
-  state.actions.forEach((action, idx) => {
-    if (!action.type) errors.push(`Action ${idx + 1} has no type selected`);
-  });
-  return errors;
-};
-
+// Main Component
 const CreateWorkflow = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("basic");
   const [isCreating, setIsCreating] = useState(false);
+  const [cronMode, setCronMode] = useState<"expression" | "interval">("interval");
 
-  // Modals state
+  // Modals
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
-  const [aiCreationOpen, setAiCreationOpen] = useState(false);
-  const [aiJsonBuilderOpen, setAiJsonBuilderOpen] = useState(false);
+  const [aiBuilderOpen, setAiBuilderOpen] = useState(false);
   const [replaceActionId, setReplaceActionId] = useState<string | null>(null);
 
-  // Unified workflow state
+  // Workflow state
   const [workflowState, setWorkflowState] = useState<WorkflowState>({
     name: "",
     description: "",
     intent: "",
-    trigger: { type: "webhook", config: {} },
+    trigger: { type: "webhook", config: { path: "/webhook/new", method: "POST" } },
     actions: [],
   });
 
-  // JSON strings for Advanced editing
-  const [triggerJson, setTriggerJson] = useState("");
-  const [actionsJson, setActionsJson] = useState("");
+  // JSON strings for Advanced mode
+  const [workflowJson, setWorkflowJson] = useState("");
   const [jsonError, setJsonError] = useState<string | null>(null);
 
   // Validation
   const validationErrors = validateWorkflow(workflowState);
+  const requiredConnections = getRequiredConnections(workflowState.actions);
   const isValid = validationErrors.length === 0;
 
   // DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  // Sync JSON strings when workflowState changes
+  // Sync JSON when state changes
   useEffect(() => {
-    setTriggerJson(JSON.stringify(workflowState.trigger, null, 2));
-    setActionsJson(JSON.stringify(workflowState.actions, null, 2));
+    const json = JSON.stringify(workflowState, null, 2);
+    setWorkflowJson(json);
   }, [workflowState]);
 
-  // Parse JSON and update workflowState
+  // Parse JSON and update state
   const applyJsonChanges = useCallback(() => {
     try {
-      const parsedTrigger = JSON.parse(triggerJson);
-      const parsedActions = JSON.parse(actionsJson);
-      
-      setWorkflowState(prev => ({
-        ...prev,
-        trigger: parsedTrigger,
-        actions: parsedActions,
-      }));
+      const parsed = JSON.parse(workflowJson);
+      setWorkflowState(parsed);
       setJsonError(null);
       return true;
     } catch {
-      setJsonError("Invalid JSON format. Please check your syntax.");
+      setJsonError("Invalid JSON format");
       return false;
     }
-  }, [triggerJson, actionsJson]);
+  }, [workflowJson]);
 
-  // Auto-apply JSON changes when switching to basic tab
+  // Auto-apply JSON when switching tabs
   useEffect(() => {
     if (activeTab === "basic") {
       applyJsonChanges();
     }
   }, [activeTab, applyJsonChanges]);
 
-  // Update basic info fields
+  // Update handlers
   const updateBasicField = (field: keyof Pick<WorkflowState, 'name' | 'description' | 'intent'>, value: string) => {
     setWorkflowState(prev => ({ ...prev, [field]: value }));
   };
 
-  // Update trigger
   const updateTrigger = (updates: Partial<Trigger>) => {
     setWorkflowState(prev => ({
       ...prev,
@@ -620,145 +609,76 @@ const CreateWorkflow = () => {
   const updateTriggerConfig = (field: string, value: unknown) => {
     setWorkflowState(prev => ({
       ...prev,
-      trigger: {
-        ...prev.trigger,
-        config: { ...prev.trigger.config, [field]: value }
-      }
+      trigger: { ...prev.trigger, config: { ...prev.trigger.config, [field]: value } }
     }));
   };
 
-  // Action management
+  // Action handlers
   const addAction = () => {
-    const newAction: Action = {
-      id: `action_${Date.now()}`,
-      type: "",
-      config: {}
-    };
+    const newAction: Action = { id: `action_${Date.now()}`, type: "", config: {}, onSuccessNext: [], onFailureNext: [] };
+    setWorkflowState(prev => ({ ...prev, actions: [...prev.actions, newAction] }));
+  };
+
+  const removeAction = (id: string) => {
     setWorkflowState(prev => ({
       ...prev,
-      actions: [...prev.actions, newAction]
+      actions: prev.actions.filter(a => a.id !== id).map(a => ({
+        ...a,
+        onSuccessNext: a.onSuccessNext?.filter(nextId => nextId !== id),
+        onFailureNext: a.onFailureNext?.filter(nextId => nextId !== id)
+      }))
     }));
   };
 
-  const removeAction = (actionId: string) => {
-    setWorkflowState(prev => ({
-      ...prev,
-      actions: prev.actions.filter(a => a.id !== actionId)
-    }));
-  };
-
-  const updateActionType = (actionId: string, type: string) => {
+  const updateActionType = (id: string, type: string) => {
     const template = actionTemplates.find(t => t.type === type);
-    const defaultConfig = template?.defaultConfig || {};
-    
     setWorkflowState(prev => ({
       ...prev,
-      actions: prev.actions.map(a => {
-        if (a.id === actionId) {
-          return { ...a, type, config: defaultConfig };
-        }
-        return a;
-      })
+      actions: prev.actions.map(a => a.id === id ? { ...a, type, config: template?.defaultConfig || {} } : a)
     }));
   };
 
-  const updateActionConfig = (actionId: string, field: string, value: unknown) => {
+  const updateActionConfig = (id: string, field: string, value: unknown) => {
     setWorkflowState(prev => ({
       ...prev,
-      actions: prev.actions.map(a => {
-        if (a.id === actionId) {
-          return { ...a, config: { ...a.config, [field]: value } };
-        }
-        return a;
-      })
+      actions: prev.actions.map(a => a.id === id ? { ...a, config: { ...a.config, [field]: value } } : a)
     }));
   };
 
-  // Drag and drop handler
+  const updateActionFlow = (id: string, field: "onSuccessNext" | "onFailureNext", value: string[]) => {
+    setWorkflowState(prev => ({
+      ...prev,
+      actions: prev.actions.map(a => a.id === id ? { ...a, [field]: value } : a)
+    }));
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
     if (over && active.id !== over.id) {
       setWorkflowState(prev => {
         const oldIndex = prev.actions.findIndex(a => a.id === active.id);
         const newIndex = prev.actions.findIndex(a => a.id === over.id);
-        
-        return {
-          ...prev,
-          actions: arrayMove(prev.actions, oldIndex, newIndex)
-        };
+        return { ...prev, actions: arrayMove(prev.actions, oldIndex, newIndex) };
       });
     }
   };
 
-  // Template selection handler
   const handleSelectTemplate = (template: ActionTemplate) => {
     if (replaceActionId) {
       setWorkflowState(prev => ({
         ...prev,
-        actions: prev.actions.map(a => {
-          if (a.id === replaceActionId) {
-            return {
-              ...a,
-              type: template.type,
-              config: { ...template.defaultConfig }
-            };
-          }
-          return a;
-        })
+        actions: prev.actions.map(a => a.id === replaceActionId ? { ...a, type: template.type, config: { ...template.defaultConfig } } : a)
       }));
       setReplaceActionId(null);
     } else {
-      const newAction: Action = {
-        id: `action_${Date.now()}`,
-        type: template.type,
-        config: { ...template.defaultConfig }
-      };
-      setWorkflowState(prev => ({
-        ...prev,
-        actions: [...prev.actions, newAction]
-      }));
+      const newAction: Action = { id: `action_${Date.now()}`, type: template.type, config: { ...template.defaultConfig }, onSuccessNext: [], onFailureNext: [] };
+      setWorkflowState(prev => ({ ...prev, actions: [...prev.actions, newAction] }));
     }
   };
 
-  const openTemplatesForReplace = (actionId: string) => {
-    setReplaceActionId(actionId);
-    setTemplateModalOpen(true);
-  };
-
-  const openTemplatesForNew = () => {
-    setReplaceActionId(null);
-    setTemplateModalOpen(true);
-  };
-
-  // AI Creation handler
-  const handleAICreation = (data: { name: string; description: string; intent: string; trigger: Trigger; actions: Action[] }) => {
-    setWorkflowState({
-      name: data.name,
-      description: data.description,
-      intent: data.intent,
-      trigger: data.trigger,
-      actions: data.actions
-    });
-    toast.success("AI suggestions applied!");
-  };
-
-  // AI JSON Builder handler
-  const handleAIJsonBuilder = (trigger: Trigger, actions: Action[]) => {
-    setTriggerJson(JSON.stringify(trigger, null, 2));
-    setActionsJson(JSON.stringify(actions, null, 2));
-    toast.success("AI-generated JSON applied to editors");
-  };
-
-  // Insert template JSON
-  const insertTemplateJson = () => {
-    const sampleTrigger: Trigger = { type: "webhook", config: { path: "/your-endpoint", method: "POST" } };
-    const sampleActions: Action[] = [
-      { id: "action_1", type: "send_email", config: { to: "{{user.email}}", subject: "Subject", body: "Message body" } }
-    ];
-    setTriggerJson(JSON.stringify(sampleTrigger, null, 2));
-    setActionsJson(JSON.stringify(sampleActions, null, 2));
-    toast.info("Template JSON inserted");
+  const handleAIApply = (workflow: Partial<WorkflowState>) => {
+    setWorkflowState(prev => ({ ...prev, ...workflow }));
+    toast.success("AI workflow applied!");
   };
 
   const handleCreate = async () => {
@@ -766,453 +686,284 @@ const CreateWorkflow = () => {
       toast.error("Please fix validation errors before creating");
       return;
     }
-
     setIsCreating(true);
     await new Promise(r => setTimeout(r, 1500));
-
     toast.success("Workflow created successfully!");
     setIsCreating(false);
     navigate("/app/workflows");
   };
 
+  const handleSaveDraft = () => {
+    toast.info("Workflow saved as draft");
+  };
+
   return (
     <AppShell>
-      <div className="px-4 lg:px-6 py-4 lg:py-6 max-w-4xl">
+      <div className="px-4 lg:px-6 py-4 lg:py-6">
         {/* Back Navigation */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="mb-4 text-muted-foreground hover:text-foreground"
-          asChild
-        >
-          <Link to="/app/workflows">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Workflows
-          </Link>
+        <Button variant="ghost" size="sm" className="mb-4 text-muted-foreground hover:text-foreground" asChild>
+          <Link to="/app/workflows"><ArrowLeft className="w-4 h-4 mr-2" />Back to Workflows</Link>
         </Button>
 
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <h1 className="text-2xl font-bold text-foreground">Create Workflow</h1>
-          <p className="text-muted-foreground mt-1">
-            Build a new automation using the guided builder or advanced JSON mode.
-          </p>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Create Workflow</h1>
+              <p className="text-muted-foreground mt-1">Build a new automation with the guided builder or JSON editor.</p>
+            </div>
+            <Button variant="outline" onClick={() => setAiBuilderOpen(true)}>
+              <Sparkles className="w-4 h-4 mr-2" />AI Builder
+            </Button>
+          </div>
         </motion.div>
 
-        {/* Tab Navigation */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="basic">Basic Creation</TabsTrigger>
-            <TabsTrigger value="advanced" disabled={!!jsonError && activeTab === "basic"}>
-              Advanced Creation
-            </TabsTrigger>
-          </TabsList>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Editor */}
+          <div className="lg:col-span-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2 max-w-md">
+                <TabsTrigger value="basic" className="flex items-center gap-2">
+                  <Settings2 className="w-4 h-4" />Basic Builder
+                </TabsTrigger>
+                <TabsTrigger value="advanced" disabled={!!jsonError && activeTab === "basic"} className="flex items-center gap-2">
+                  <Code2 className="w-4 h-4" />Advanced (JSON)
+                </TabsTrigger>
+              </TabsList>
 
-          {/* ============ BASIC CREATION TAB ============ */}
-          <TabsContent value="basic" className="space-y-4">
-            {/* AI Assist Button */}
-            <div className="flex justify-end">
-              <Button variant="outline" onClick={() => setAiCreationOpen(true)}>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate with AI
-              </Button>
-            </div>
+              {/* BASIC MODE */}
+              <TabsContent value="basic" className="space-y-4">
+                {/* Workflow Info */}
+                <AppCard>
+                  <h2 className="text-lg font-medium text-foreground mb-4">Workflow Information</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="name">Name *</Label>
+                      <Input id="name" value={workflowState.name} onChange={(e) => updateBasicField("name", e.target.value)} placeholder="My Workflow" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea id="description" value={workflowState.description} onChange={(e) => updateBasicField("description", e.target.value)} placeholder="What does this workflow do?" className="mt-1 min-h-[60px]" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Label htmlFor="intent">Intent</Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger><Sparkles className="w-3 h-3 text-muted-foreground" /></TooltipTrigger>
+                            <TooltipContent><p className="text-xs">Helps Synth understand the purpose of this workflow</p></TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <Input id="intent" value={workflowState.intent} onChange={(e) => updateBasicField("intent", e.target.value)} placeholder="What is the goal of this workflow?" />
+                    </div>
+                  </div>
+                </AppCard>
 
-            {/* Workflow Information */}
-            <AppCard>
-              <h2 className="text-lg font-medium text-foreground mb-4">Workflow Information</h2>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Workflow Name *</Label>
-                  <Input
-                    id="name"
-                    value={workflowState.name}
-                    onChange={(e) => updateBasicField("name", e.target.value)}
-                    placeholder="My Automation"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={workflowState.description}
-                    onChange={(e) => updateBasicField("description", e.target.value)}
-                    placeholder="Describe what this workflow does"
-                    className="mt-1 min-h-[80px]"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="intent">Intent (optional)</Label>
-                  <Input
-                    id="intent"
-                    value={workflowState.intent}
-                    onChange={(e) => updateBasicField("intent", e.target.value)}
-                    placeholder="What is the goal of this workflow?"
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-            </AppCard>
+                {/* Trigger */}
+                <AppCard>
+                  <h2 className="text-lg font-medium text-foreground mb-4">Trigger Configuration</h2>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-3">
+                      {triggerOptions.map((option) => {
+                        const Icon = option.icon;
+                        const isSelected = workflowState.trigger.type === option.value;
+                        return (
+                          <button key={option.value} onClick={() => {
+                            const config = option.value === "webhook" ? { path: "/webhook/new", method: "POST" } : option.value === "cron" ? { mode: "interval", intervalAmount: 1, intervalUnit: "hours" } : {};
+                            updateTrigger({ type: option.value, config });
+                          }} className={`p-4 rounded-lg border text-left transition-all ${isSelected ? "border-primary bg-primary/10" : "border-border/50 hover:border-border bg-muted/20"}`}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Icon className={`w-5 h-5 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+                              <span className={`text-sm font-medium ${isSelected ? "text-primary" : "text-foreground"}`}>{option.label}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">{option.description}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
 
-            {/* Trigger Section */}
-            <AppCard>
-              <h2 className="text-lg font-medium text-foreground mb-4">Choose Trigger</h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                Define when this workflow should run.
-              </p>
-              
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  {triggerTypeOptions.map((option) => {
-                    const Icon = option.icon;
-                    return (
-                      <button
-                        key={option.value}
-                        onClick={() => updateTrigger({ type: option.value as TriggerType, config: {} })}
-                        className={`p-3 rounded-lg border text-left transition-all ${
-                          workflowState.trigger.type === option.value
-                            ? "border-primary bg-primary/10"
-                            : "border-border/50 hover:border-border bg-muted/20"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <Icon className={`w-4 h-4 ${workflowState.trigger.type === option.value ? "text-primary" : "text-muted-foreground"}`} />
-                          <span className={`text-sm font-medium ${workflowState.trigger.type === option.value ? "text-primary" : "text-foreground"}`}>
-                            {option.label}
-                          </span>
+                    {/* Webhook Config */}
+                    {workflowState.trigger.type === "webhook" && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 rounded-lg bg-muted/20 border border-border/30 space-y-3">
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="col-span-2">
+                            <Label className="text-xs text-muted-foreground">Path *</Label>
+                            <Input value={(workflowState.trigger.config?.path as string) || ""} onChange={(e) => updateTriggerConfig("path", e.target.value)} placeholder="/webhook/my-endpoint" className="mt-1" />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Method</Label>
+                            <Select value={(workflowState.trigger.config?.method as string) || "POST"} onValueChange={(v) => updateTriggerConfig("method", v)}>
+                              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="POST">POST</SelectItem>
+                                <SelectItem value="GET">GET</SelectItem>
+                                <SelectItem value="PUT">PUT</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
-                        <p className="text-xs text-muted-foreground">{option.description}</p>
-                      </button>
-                    );
-                  })}
-                </div>
+                        <div className="flex items-center gap-2 p-2 rounded bg-background/50 border border-border/30">
+                          <span className="text-xs text-muted-foreground">URL Preview:</span>
+                          <code className="text-xs text-primary font-mono">https://synth.app/hooks{(workflowState.trigger.config?.path as string) || "/webhook"}</code>
+                        </div>
+                      </motion.div>
+                    )}
 
-                {/* Webhook Config */}
-                {workflowState.trigger.type === "webhook" && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="pt-2"
-                  >
-                    <Label>Webhook Path (placeholder)</Label>
-                    <Input
-                      value={(workflowState.trigger.config?.path as string) || ""}
-                      onChange={(e) => updateTriggerConfig("path", e.target.value)}
-                      placeholder="/your-endpoint"
-                      className="mt-1"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      URL: https://synth.app/hooks<span className="text-primary">{(workflowState.trigger.config?.path as string) || "/your-endpoint"}</span>
-                    </p>
-                  </motion.div>
+                    {/* Cron Config */}
+                    {workflowState.trigger.type === "cron" && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 rounded-lg bg-muted/20 border border-border/30 space-y-4">
+                        <Tabs value={cronMode} onValueChange={(v) => { setCronMode(v as "expression" | "interval"); updateTriggerConfig("mode", v); }}>
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="interval">Interval</TabsTrigger>
+                            <TabsTrigger value="expression">Cron Expression</TabsTrigger>
+                          </TabsList>
+                          <TabsContent value="interval" className="pt-4">
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm text-muted-foreground">Run every</span>
+                              <Input type="number" min={1} value={(workflowState.trigger.config?.intervalAmount as number) || 1} onChange={(e) => updateTriggerConfig("intervalAmount", parseInt(e.target.value) || 1)} className="w-20" />
+                              <Select value={(workflowState.trigger.config?.intervalUnit as string) || "hours"} onValueChange={(v) => updateTriggerConfig("intervalUnit", v)}>
+                                <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="seconds">seconds</SelectItem>
+                                  <SelectItem value="minutes">minutes</SelectItem>
+                                  <SelectItem value="hours">hours</SelectItem>
+                                  <SelectItem value="days">days</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </TabsContent>
+                          <TabsContent value="expression" className="pt-4 space-y-2">
+                            <Label className="text-xs text-muted-foreground">Cron Expression *</Label>
+                            <Input value={(workflowState.trigger.config?.expression as string) || ""} onChange={(e) => updateTriggerConfig("expression", e.target.value)} placeholder="0 9 * * *" className="font-mono" />
+                            <p className="text-xs text-muted-foreground">Format: minute hour day month weekday (e.g., "0 9 * * *" = 9 AM daily)</p>
+                          </TabsContent>
+                        </Tabs>
+                      </motion.div>
+                    )}
+
+                    {/* Manual Config */}
+                    {workflowState.trigger.type === "manual" && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 rounded-lg bg-muted/20 border border-border/30">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Hand className="w-4 h-4" />
+                          <p className="text-sm">This workflow will only run when triggered manually.</p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                </AppCard>
+
+                {/* Actions */}
+                <AppCard>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-medium text-foreground">Actions</h2>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => { setReplaceActionId(null); setTemplateModalOpen(true); }}>
+                        <LayoutTemplate className="w-4 h-4 mr-2" />Templates
+                      </Button>
+                      <Button size="sm" onClick={addAction}>
+                        <Plus className="w-4 h-4 mr-2" />Add Action
+                      </Button>
+                    </div>
+                  </div>
+
+                  {workflowState.actions.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p className="text-sm">No actions yet. Add your first action to get started.</p>
+                    </div>
+                  ) : (
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      <SortableContext items={workflowState.actions.map(a => a.id)} strategy={verticalListSortingStrategy}>
+                        <div className="space-y-3">
+                          {workflowState.actions.map((action, index) => (
+                            <SortableActionCard
+                              key={action.id}
+                              action={action}
+                              index={index}
+                              allActions={workflowState.actions}
+                              onRemove={removeAction}
+                              onUpdateType={updateActionType}
+                              onUpdateConfig={updateActionConfig}
+                              onUpdateFlow={updateActionFlow}
+                              onOpenTemplates={(id) => { setReplaceActionId(id); setTemplateModalOpen(true); }}
+                            />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                  )}
+                </AppCard>
+
+                {/* Required Connections Warning */}
+                {requiredConnections.length > 0 && (
+                  <Alert className="bg-amber-500/10 border-amber-500/30">
+                    <Link2 className="w-4 h-4 text-amber-500" />
+                    <AlertDescription className="text-amber-200">
+                      This workflow requires connections to: {requiredConnections.join(", ")}. 
+                      <Link to="/app/connections" className="underline ml-1 hover:text-amber-100">Configure connections</Link>
+                    </AlertDescription>
+                  </Alert>
                 )}
+              </TabsContent>
 
-                {/* Schedule Config */}
-                {workflowState.trigger.type === "schedule" && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="pt-2 space-y-3"
-                  >
-                    <div>
-                      <Label>Frequency</Label>
-                      <Select
-                        value={(workflowState.trigger.config?.frequency as string) || "daily"}
-                        onValueChange={(value) => updateTriggerConfig("frequency", value)}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="hourly">Every Hour</SelectItem>
-                          <SelectItem value="daily">Every Day</SelectItem>
-                          <SelectItem value="weekly">Every Week</SelectItem>
-                          <SelectItem value="monthly">Every Month</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Time</Label>
-                      <Input
-                        type="time"
-                        value={(workflowState.trigger.config?.time as string) || "09:00"}
-                        onChange={(e) => updateTriggerConfig("time", e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Manual Config */}
-                {workflowState.trigger.type === "manual" && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="pt-2"
-                  >
-                    <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
-                      <p className="text-sm text-muted-foreground">
-                        No configuration needed. This workflow will only run when you trigger it manually.
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Event Config */}
-                {workflowState.trigger.type === "event" && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="pt-2 space-y-3"
-                  >
-                    <div>
-                      <Label>App</Label>
-                      <Select
-                        value={(workflowState.trigger.config?.app as string) || ""}
-                        onValueChange={(value) => updateTriggerConfig("app", value)}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select an app" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="slack">Slack</SelectItem>
-                          <SelectItem value="gmail">Gmail</SelectItem>
-                          <SelectItem value="stripe">Stripe</SelectItem>
-                          <SelectItem value="hubspot">HubSpot</SelectItem>
-                          <SelectItem value="api">Custom API</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Event</Label>
-                      <Input
-                        value={(workflowState.trigger.config?.event as string) || ""}
-                        onChange={(e) => updateTriggerConfig("event", e.target.value)}
-                        placeholder="e.g., message.received, payment.created"
-                        className="mt-1"
-                      />
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-            </AppCard>
-
-            {/* Actions Section */}
-            <AppCard>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-lg font-medium text-foreground">Actions</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Define what happens when this workflow runs. Drag to reorder.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={openTemplatesForNew}
-                  >
-                    <LayoutTemplate className="w-4 h-4 mr-1" />
-                    Templates
-                  </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={addAction}
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    Add
-                  </Button>
-                </div>
-              </div>
-
-              {workflowState.actions.length === 0 ? (
-                <div className="p-6 rounded-lg border border-dashed border-border/50 text-center">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    No actions configured yet. Add an action to define what happens when this workflow runs.
-                  </p>
-                  <div className="flex justify-center gap-2">
-                    <Button variant="outline" size="sm" onClick={openTemplatesForNew}>
-                      <LayoutTemplate className="w-4 h-4 mr-1" />
-                      Browse Templates
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={addAction}>
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add Empty Action
+              {/* ADVANCED MODE */}
+              <TabsContent value="advanced" className="space-y-4">
+                <AppCard>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-medium text-foreground">Workflow JSON</h2>
+                    <Button variant="outline" size="sm" onClick={applyJsonChanges} disabled={!!jsonError}>
+                      <CheckCircle2 className="w-4 h-4 mr-2" />Apply Changes
                     </Button>
                   </div>
-                </div>
-              ) : (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={workflowState.actions.map(a => a.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div className="space-y-4">
-                      {workflowState.actions.map((action, idx) => (
-                        <SortableActionCard
-                          key={action.id}
-                          action={action}
-                          index={idx}
-                          onRemove={removeAction}
-                          onUpdateType={updateActionType}
-                          onUpdateConfig={updateActionConfig}
-                          onOpenTemplates={openTemplatesForReplace}
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
-              )}
-            </AppCard>
+                  {jsonError && (
+                    <Alert className="mb-4 bg-destructive/10 border-destructive/30">
+                      <AlertCircle className="w-4 h-4 text-destructive" />
+                      <AlertDescription className="text-destructive">{jsonError}</AlertDescription>
+                    </Alert>
+                  )}
+                  <Textarea
+                    value={workflowJson}
+                    onChange={(e) => { setWorkflowJson(e.target.value); setJsonError(null); }}
+                    className="min-h-[500px] font-mono text-sm bg-background/50"
+                    placeholder="Enter workflow JSON..."
+                  />
+                </AppCard>
+              </TabsContent>
+            </Tabs>
 
-            {/* Validation Warnings */}
-            {validationErrors.length > 0 && (
-              <Alert className="border-amber-500/50 bg-amber-500/10">
-                <AlertCircle className="h-4 w-4 text-amber-500" />
-                <AlertDescription className="text-amber-200">
-                  <ul className="list-disc list-inside">
-                    {validationErrors.map((err, i) => (
-                      <li key={i}>{err}</li>
-                    ))}
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Create/Cancel Buttons */}
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" asChild>
-                <Link to="/app/workflows">Cancel</Link>
+            {/* Footer Actions */}
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-border/30">
+              <Button variant="outline" onClick={handleSaveDraft}>
+                <Save className="w-4 h-4 mr-2" />Save as Draft
               </Button>
-              <Button onClick={handleCreate} disabled={!isValid || isCreating}>
-                {isCreating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Create Workflow
-                  </>
-                )}
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" asChild><Link to="/app/workflows">Cancel</Link></Button>
+                <Button onClick={handleCreate} disabled={!isValid || isCreating}>
+                  {isCreating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating...</> : "Create Workflow"}
+                </Button>
+              </div>
             </div>
-          </TabsContent>
+          </div>
 
-          {/* ============ ADVANCED CREATION TAB ============ */}
-          <TabsContent value="advanced" className="space-y-4">
-            {/* Instructions */}
-            <Alert className="border-muted bg-muted/30">
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-              <AlertDescription className="text-muted-foreground">
-                Build or paste your workflow definition using structured JSON for trigger and actions.
-              </AlertDescription>
-            </Alert>
-
-            {/* AI & Template Buttons */}
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={insertTemplateJson}>
-                <LayoutTemplate className="w-4 h-4 mr-1" />
-                Insert Template
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setAiJsonBuilderOpen(true)}>
-                <Sparkles className="w-4 h-4 mr-1" />
-                AI JSON Builder
-              </Button>
-            </div>
-
-            {/* JSON Error */}
-            {jsonError && (
-              <Alert className="border-destructive/50 bg-destructive/10">
-                <AlertTriangle className="h-4 w-4 text-destructive" />
-                <AlertDescription className="text-destructive">
-                  {jsonError}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Trigger JSON */}
-            <AppCard>
-              <h2 className="text-lg font-medium text-foreground mb-4">Trigger Configuration (JSON)</h2>
-              <Textarea
-                value={triggerJson}
-                onChange={(e) => setTriggerJson(e.target.value)}
-                className="font-mono text-sm min-h-[150px] bg-background/50 border-border/50"
-                placeholder='{"type": "webhook", "config": {}}'
-              />
-            </AppCard>
-
-            {/* Actions JSON */}
-            <AppCard>
-              <h2 className="text-lg font-medium text-foreground mb-4">Actions Configuration (JSON)</h2>
-              <Textarea
-                value={actionsJson}
-                onChange={(e) => setActionsJson(e.target.value)}
-                className="font-mono text-sm min-h-[250px] bg-background/50 border-border/50"
-                placeholder='[{"id": "action_1", "type": "send_email", "config": {}}]'
-              />
-            </AppCard>
-
-            {/* Apply JSON Button */}
-            <div className="flex justify-start">
-              <Button variant="outline" onClick={applyJsonChanges}>
-                Apply JSON Changes
-              </Button>
-            </div>
-
-            {/* Create/Cancel Buttons */}
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" asChild>
-                <Link to="/app/workflows">Cancel</Link>
-              </Button>
-              <Button onClick={handleCreate} disabled={!isValid || isCreating || !!jsonError}>
-                {isCreating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Create Workflow
-                  </>
-                )}
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
+          {/* Summary Sidebar */}
+          <div className="lg:col-span-1">
+            <WorkflowSummaryCard
+              name={workflowState.name}
+              description={workflowState.description}
+              intent={workflowState.intent}
+              trigger={workflowState.trigger}
+              actions={workflowState.actions}
+              validationErrors={validationErrors}
+              requiredConnections={requiredConnections}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Modals */}
-      <ActionTemplateModal
-        open={templateModalOpen}
-        onClose={() => {
-          setTemplateModalOpen(false);
-          setReplaceActionId(null);
-        }}
-        onSelectTemplate={handleSelectTemplate}
-      />
-      <AICreationModal
-        open={aiCreationOpen}
-        onClose={() => setAiCreationOpen(false)}
-        onApply={handleAICreation}
-      />
-      <AIJsonBuilderModal
-        open={aiJsonBuilderOpen}
-        onClose={() => setAiJsonBuilderOpen(false)}
-        onApply={handleAIJsonBuilder}
-      />
+      <ActionTemplateModal open={templateModalOpen} onClose={() => setTemplateModalOpen(false)} onSelectTemplate={handleSelectTemplate} />
+      <AIBuilderModal open={aiBuilderOpen} onClose={() => setAiBuilderOpen(false)} onApply={handleAIApply} />
     </AppShell>
   );
 };
