@@ -1,7 +1,30 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronDown, ChevronUp, Play, Zap, Trash2, Loader2 } from "lucide-react";
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  Play, 
+  Zap, 
+  ZapOff,
+  Trash2, 
+  Loader2, 
+  ArrowLeft,
+  Target,
+  Webhook,
+  Calendar,
+  Mail,
+  MessageSquare,
+  Database,
+  Clock,
+  FileText,
+  Settings,
+  Pencil,
+  CheckCircle,
+  XCircle,
+  Info,
+  Server
+} from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import AppCard from "@/components/app/AppCard";
 import StatusBadge from "@/components/app/StatusBadge";
@@ -10,50 +33,158 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { formatDate, formatDateTime } from "@/lib/utils";
 
-// Mock data
+// Mock data with extended fields
 const mockWorkflow = {
-  id: "1",
+  id: "wf_abc123",
   name: "Send Welcome Email",
   description: "Automatically sends a welcome email when a new user signs up to the platform.",
+  intent: "Greet new users and provide them with onboarding information to help them get started.",
   status: "inactive",
+  active: false,
+  readOnly: false,
   created_at: "2025-01-10T10:00:00Z",
   updated_at: "2025-01-15T14:30:00Z",
+  last_deployed_at: "2025-01-12T09:00:00Z",
+  pipedream_deployment_state: "deployed",
+  n8n_workflow_id: "n8n_wf_789xyz",
   trigger: { type: "webhook", config: { path: "/new-user", method: "POST" } },
   actions: [
-    { id: "action_1", type: "send_email", config: { to: "{{user.email}}", subject: "Welcome!" } },
+    { id: "action_1", type: "send_email", config: { to: "{{user.email}}", subject: "Welcome to Synth!", body: "Hi {{user.name}}, welcome aboard!" } },
+    { id: "action_2", type: "slack_message", config: { channel: "#new-users", message: "New user signed up: {{user.name}}" } },
+    { id: "action_3", type: "database_insert", config: { table: "user_events", data: { event: "signup", user_id: "{{user.id}}" } } },
   ],
 };
 
 const mockExecutions = [
   {
-    id: "1",
+    id: "exec_1",
     status: "success",
     created_at: "2025-01-15T15:45:00Z",
     finished_at: "2025-01-15T15:45:02Z",
-    input_data: { user: { email: "test@example.com", name: "Test User" } },
-    output_data: { success: true, messageId: "msg_123" },
+    duration: "2s",
+    summary: "Successfully sent welcome email to test@example.com",
   },
   {
-    id: "2",
+    id: "exec_2",
     status: "error",
     created_at: "2025-01-14T14:30:00Z",
     finished_at: "2025-01-14T14:30:01Z",
-    input_data: { user: { email: "invalid", name: "Bad User" } },
-    output_data: { error: "Invalid email address" },
-    errorMessage: "Failed to send email: Invalid email address format",
+    duration: "1s",
+    summary: "Failed to send email: Invalid email address format",
+    errorMessage: "The email address provided was not in a valid format.",
   },
   {
-    id: "3",
+    id: "exec_3",
     status: "success",
     created_at: "2025-01-13T10:15:00Z",
     finished_at: "2025-01-13T10:15:03Z",
-    input_data: { user: { email: "another@example.com", name: "Another User" } },
-    output_data: { success: true, messageId: "msg_456" },
+    duration: "3s",
+    summary: "Successfully processed signup for another@example.com",
   },
 ];
+
+// Helper function to get human-readable trigger description
+const getTriggerDescription = (trigger: { type: string; config?: Record<string, unknown> }) => {
+  const descriptions: { type: string; text: string; details?: string[] }[] = [];
+  
+  switch (trigger.type) {
+    case "webhook":
+      descriptions.push({
+        type: "Webhook",
+        text: "This workflow runs when a webhook is called.",
+        details: trigger.config?.path ? [`Webhook Path: ${trigger.config.path}`] : undefined
+      });
+      break;
+    case "schedule":
+      descriptions.push({
+        type: "Schedule",
+        text: "This workflow runs on a schedule.",
+        details: trigger.config?.cron ? [`Schedule: ${trigger.config.cron}`] : undefined
+      });
+      break;
+    case "email":
+      descriptions.push({
+        type: "Email",
+        text: "This workflow runs when an email is received."
+      });
+      break;
+    case "manual":
+      descriptions.push({
+        type: "Manual",
+        text: "This workflow runs when triggered manually."
+      });
+      break;
+    default:
+      descriptions.push({
+        type: trigger.type || "Unknown",
+        text: `This workflow runs when triggered by: ${trigger.type || "Unknown trigger"}`
+      });
+  }
+  
+  return descriptions[0];
+};
+
+// Helper function to get action icon
+const getActionIcon = (type: string) => {
+  switch (type) {
+    case "send_email":
+      return <Mail className="w-4 h-4 text-primary" />;
+    case "slack_message":
+      return <MessageSquare className="w-4 h-4 text-primary" />;
+    case "database_insert":
+    case "database_update":
+      return <Database className="w-4 h-4 text-primary" />;
+    default:
+      return <Settings className="w-4 h-4 text-primary" />;
+  }
+};
+
+// Helper function to get human-readable action description
+const getActionDescription = (action: { id: string; type: string; config?: Record<string, unknown> }) => {
+  const config = action.config || {};
+  
+  switch (action.type) {
+    case "send_email":
+      return {
+        title: "Send Email",
+        details: [
+          config.to && `To: ${config.to}`,
+          config.subject && `Subject: ${config.subject}`,
+        ].filter(Boolean) as string[]
+      };
+    case "slack_message":
+      return {
+        title: "Send Slack Message",
+        details: [
+          config.channel && `Channel: ${config.channel}`,
+          config.message && `Message: ${String(config.message).substring(0, 50)}${String(config.message).length > 50 ? '...' : ''}`,
+        ].filter(Boolean) as string[]
+      };
+    case "database_insert":
+      return {
+        title: "Insert Database Record",
+        details: [
+          config.table && `Table: ${config.table}`,
+        ].filter(Boolean) as string[]
+      };
+    case "database_update":
+      return {
+        title: "Update Database Record",
+        details: [
+          config.table && `Table: ${config.table}`,
+        ].filter(Boolean) as string[]
+      };
+    default:
+      return {
+        title: action.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        details: []
+      };
+  }
+};
 
 const WorkflowDetail = () => {
   const { id } = useParams();
@@ -82,13 +213,14 @@ const WorkflowDetail = () => {
     status: string;
   } | null>(null);
 
-  const handleActivate = async () => {
+  const handleToggleActive = async () => {
     setIsActivating(true);
     await new Promise(r => setTimeout(r, 1500));
     
-    setWorkflow({ ...workflow, status: "active" });
+    const newStatus = workflow.active ? "inactive" : "active";
+    setWorkflow({ ...workflow, status: newStatus, active: !workflow.active });
     setIsActivating(false);
-    toast.success("Workflow activated successfully");
+    toast.success(workflow.active ? "Workflow deactivated" : "Workflow activated successfully");
   };
 
   const handleOpenRunDialog = () => {
@@ -99,7 +231,6 @@ const WorkflowDetail = () => {
   };
 
   const handleRun = async () => {
-    // Validate inputData if provided
     let parsedInputData = {};
     if (inputData.trim()) {
       try {
@@ -114,7 +245,6 @@ const WorkflowDetail = () => {
     setIsRunning(true);
     await new Promise(r => setTimeout(r, 2000));
 
-    // Simulate execution result
     const result = {
       id: "exec_" + crypto.randomUUID().slice(0, 8),
       data: { success: true, processed: parsedInputData },
@@ -132,59 +262,66 @@ const WorkflowDetail = () => {
     await new Promise(r => setTimeout(r, 1000));
     
     toast.success("Workflow deleted successfully", {
-      description: `Deleted ID: ${workflow.id}`
+      description: `Deleted: ${workflow.name}`
     });
     setIsDeleting(false);
     navigate("/app/workflows");
   };
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case "success": return "success";
-      case "error": return "error";
-      case "running": return "active";
-      default: return "inactive";
-    }
-  };
+  const triggerInfo = getTriggerDescription(workflow.trigger);
+  const hasDeploymentInfo = workflow.pipedream_deployment_state || workflow.last_deployed_at;
 
   return (
     <AppShell>
       <div className="px-4 lg:px-6 py-4 lg:py-6 max-w-4xl">
-        {/* Header */}
+        {/* Back Navigation */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mb-4 text-muted-foreground hover:text-foreground"
+          asChild
+        >
+          <Link to="/app/workflows">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Workflows
+          </Link>
+        </Button>
+
+        {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-xl sm:text-2xl font-semibold text-foreground break-words">
                 {workflow.name}
               </h1>
-              <StatusBadge variant={workflow.status === "active" ? "active" : "inactive"}>
-                {workflow.status === "active" ? "Active" : "Inactive"}
+              <StatusBadge variant={workflow.active ? "active" : "inactive"}>
+                {workflow.active ? "Active" : "Inactive"}
               </StatusBadge>
             </div>
-            {workflow.description && (
-              <p className="text-muted-foreground break-words">{workflow.description}</p>
+            {workflow.intent && (
+              <p className="text-muted-foreground text-sm">{workflow.intent}</p>
             )}
             <div className="text-xs text-muted-foreground mt-2">
-              Created: {formatDate(workflow.created_at)} · Updated: {formatDate(workflow.updated_at)}
+              Created: {formatDate(workflow.created_at)} · Last Updated: {formatDate(workflow.updated_at)}
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {workflow.status !== "active" && (
-              <Button 
-                variant="outline" 
-                onClick={handleActivate} 
-                disabled={isActivating}
-              >
-                {isActivating ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Activating...</>
-                ) : (
-                  <><Zap className="w-4 h-4 mr-2" />Activate</>
-                )}
-              </Button>
-            )}
             <Button onClick={handleOpenRunDialog} disabled={isRunning}>
               <Play className="w-4 h-4 mr-2" />
               Run Workflow
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleToggleActive} 
+              disabled={isActivating}
+            >
+              {isActivating ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</>
+              ) : workflow.active ? (
+                <><ZapOff className="w-4 h-4 mr-2" />Deactivate</>
+              ) : (
+                <><Zap className="w-4 h-4 mr-2" />Activate</>
+              )}
             </Button>
             <Button 
               variant="outline" 
@@ -197,43 +334,192 @@ const WorkflowDetail = () => {
           </div>
         </div>
 
+        {/* Purpose Card */}
+        <AppCard className="mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Target className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-medium text-foreground">Purpose</h2>
+          </div>
+          {workflow.intent || workflow.description ? (
+            <div className="space-y-2">
+              {workflow.intent && (
+                <p className="text-sm text-foreground/80">{workflow.intent}</p>
+              )}
+              {workflow.description && workflow.description !== workflow.intent && (
+                <p className="text-sm text-muted-foreground">{workflow.description}</p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">No description provided.</p>
+          )}
+        </AppCard>
 
-        {/* Metadata */}
-        <AppCard className="mb-6">
-          <h2 className="text-lg font-medium text-foreground mb-4">Workflow Configuration</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium text-foreground mb-2">Trigger</h3>
-              {workflow.trigger ? (
-                <pre className="bg-background/40 p-4 rounded-lg text-xs sm:text-sm font-mono text-foreground overflow-x-auto">
-                  {JSON.stringify(workflow.trigger, null, 2)}
-                </pre>
-              ) : (
-                <p className="text-muted-foreground text-sm">No trigger configured</p>
-              )}
+        {/* Trigger Card */}
+        <AppCard className="mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Webhook className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-medium text-foreground">Trigger</h2>
+          </div>
+          <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">
+                {triggerInfo.type}
+              </span>
             </div>
-            
-            <div>
-              <h3 className="text-sm font-medium text-foreground mb-2">Actions</h3>
-              {workflow.actions && workflow.actions.length > 0 ? (
-                <pre className="bg-background/40 p-4 rounded-lg text-xs sm:text-sm font-mono text-foreground overflow-x-auto">
-                  {JSON.stringify(workflow.actions, null, 2)}
-                </pre>
-              ) : (
-                <p className="text-muted-foreground text-sm">No actions configured</p>
-              )}
-            </div>
+            <p className="text-sm text-foreground/80">{triggerInfo.text}</p>
+            {triggerInfo.details && triggerInfo.details.length > 0 && (
+              <ul className="mt-2 space-y-1">
+                {triggerInfo.details.map((detail, idx) => (
+                  <li key={idx} className="text-xs text-muted-foreground flex items-center gap-2">
+                    <span className="w-1 h-1 rounded-full bg-muted-foreground" />
+                    {detail}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </AppCard>
 
+        {/* Actions Card */}
+        <AppCard className="mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Settings className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-medium text-foreground">Actions</h2>
+          </div>
+          {workflow.actions && workflow.actions.length > 0 ? (
+            <div className="space-y-3">
+              {workflow.actions.map((action, idx) => {
+                const actionInfo = getActionDescription(action);
+                return (
+                  <div 
+                    key={action.id} 
+                    className="p-3 rounded-lg bg-muted/30 border border-border/30"
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-xs font-medium text-primary">
+                        {idx + 1}
+                      </div>
+                      {getActionIcon(action.type)}
+                      <span className="text-sm font-medium text-foreground">{actionInfo.title}</span>
+                    </div>
+                    {actionInfo.details.length > 0 && (
+                      <ul className="ml-9 space-y-1">
+                        {actionInfo.details.map((detail, detailIdx) => (
+                          <li key={detailIdx} className="text-xs text-muted-foreground">
+                            {detail}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">No actions configured.</p>
+          )}
+        </AppCard>
+
+        {/* Deployment Info Card - Only show if data exists */}
+        {hasDeploymentInfo && (
+          <AppCard className="mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Server className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-medium text-foreground">Deployment Info</h2>
+            </div>
+            <div className="space-y-2 text-sm">
+              {workflow.pipedream_deployment_state && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Status:</span>
+                  <span className="text-xs font-medium text-green-400 bg-green-400/10 px-2 py-0.5 rounded capitalize">
+                    {workflow.pipedream_deployment_state}
+                  </span>
+                </div>
+              )}
+              {workflow.last_deployed_at && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Last Deployed:</span>
+                  <span className="text-foreground/80">{formatDateTime(workflow.last_deployed_at)}</span>
+                </div>
+              )}
+            </div>
+          </AppCard>
+        )}
+
+        {/* Metadata Card */}
+        <AppCard className="mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <FileText className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-medium text-foreground">Details</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div>
+              <span className="text-muted-foreground">Workflow ID:</span>
+              <p className="text-foreground/80 font-mono text-xs mt-0.5">{workflow.id}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Created:</span>
+              <p className="text-foreground/80 mt-0.5">{formatDateTime(workflow.created_at)}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Last Updated:</span>
+              <p className="text-foreground/80 mt-0.5">{formatDateTime(workflow.updated_at)}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Read-Only:</span>
+              <p className="text-foreground/80 mt-0.5">{workflow.readOnly ? "Yes" : "No"}</p>
+            </div>
+            {workflow.n8n_workflow_id && (
+              <div className="sm:col-span-2">
+                <span className="text-muted-foreground">Backend Reference:</span>
+                <p className="text-foreground/80 font-mono text-xs mt-0.5">{workflow.n8n_workflow_id}</p>
+              </div>
+            )}
+          </div>
+        </AppCard>
+
+        {/* Edit Workflow Card */}
+        <AppCard className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Pencil className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-medium text-foreground">Edit Workflow</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Make changes to this workflow's configuration, triggers, and actions.
+          </p>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-block">
+                  <Button 
+                    variant="outline"
+                    disabled={workflow.readOnly}
+                    onClick={() => toast.info("Workflow editor coming soon")}
+                  >
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Edit Workflow
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {workflow.readOnly && (
+                <TooltipContent>
+                  <p>This workflow is read-only and cannot be edited.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+        </AppCard>
+
         {/* Execution History */}
-        <div>
-          <h2 className="text-lg font-medium text-foreground mb-4">Execution History</h2>
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-medium text-foreground">Execution History</h2>
+          </div>
           
           {mockExecutions.length === 0 ? (
             <AppCard>
-              <p className="text-muted-foreground text-center">No executions yet.</p>
+              <p className="text-muted-foreground text-center py-4">No executions yet.</p>
             </AppCard>
           ) : (
             <div className="space-y-3">
@@ -246,14 +532,20 @@ const WorkflowDetail = () => {
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <StatusBadge variant={getStatusBadgeVariant(execution.status)}>
-                        {execution.status === "success" ? "Success" : execution.status === "error" ? "Error" : execution.status}
-                      </StatusBadge>
+                      {execution.status === "success" ? (
+                        <CheckCircle className="w-5 h-5 text-green-400" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-400" />
+                      )}
+                      <div>
+                        <StatusBadge variant={execution.status === "success" ? "success" : "error"}>
+                          {execution.status === "success" ? "Success" : "Error"}
+                        </StatusBadge>
+                      </div>
                       <div className="text-xs sm:text-sm text-muted-foreground">
-                        <span>Started: {formatDateTime(execution.created_at)}</span>
-                        {execution.finished_at && (
-                          <span className="hidden sm:inline"> · Finished: {formatDateTime(execution.finished_at)}</span>
-                        )}
+                        <span>{formatDateTime(execution.created_at)}</span>
+                        <span className="mx-2">·</span>
+                        <span>Duration: {execution.duration}</span>
                       </div>
                     </div>
                     <button className="p-1 rounded hover:bg-muted transition-colors self-end sm:self-auto">
@@ -270,26 +562,31 @@ const WorkflowDetail = () => {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="mt-4 space-y-4"
+                      className="mt-4 space-y-3"
                     >
-                      <div>
-                        <h4 className="text-sm font-medium text-foreground mb-2">Input Data</h4>
-                        <pre className="bg-background/40 p-3 rounded-lg text-xs font-mono text-foreground overflow-x-auto">
-                          {execution.input_data ? JSON.stringify(execution.input_data, null, 2) : "null"}
-                        </pre>
+                      <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Info className="w-4 h-4 text-primary" />
+                          <h4 className="text-sm font-medium text-foreground">Summary</h4>
+                        </div>
+                        <p className="text-sm text-foreground/80">{execution.summary}</p>
                       </div>
                       
-                      <div>
-                        <h4 className="text-sm font-medium text-foreground mb-2">Output Data</h4>
-                        <pre className="bg-background/40 p-3 rounded-lg text-xs font-mono text-foreground overflow-x-auto">
-                          {execution.output_data ? JSON.stringify(execution.output_data, null, 2) : "null"}
-                        </pre>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="text-muted-foreground text-xs">Started</span>
+                          <p className="text-foreground/80">{formatDateTime(execution.created_at)}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground text-xs">Finished</span>
+                          <p className="text-foreground/80">{formatDateTime(execution.finished_at)}</p>
+                        </div>
                       </div>
 
                       {execution.errorMessage && (
-                        <div className="p-3 rounded-lg bg-red-900/20 border border-red-700">
-                          <h4 className="text-sm font-medium text-red-400 mb-1">Error Message</h4>
-                          <p className="text-sm text-red-400">{execution.errorMessage}</p>
+                        <div className="p-3 rounded-lg bg-red-900/20 border border-red-700/50">
+                          <h4 className="text-sm font-medium text-red-400 mb-1">Error Details</h4>
+                          <p className="text-sm text-red-400/80">{execution.errorMessage}</p>
                         </div>
                       )}
                     </motion.div>
@@ -308,7 +605,7 @@ const WorkflowDetail = () => {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Input Data (optional JSON)</Label>
+                <Label>Input Data (optional)</Label>
                 <Textarea
                   placeholder='{"key": "value"}'
                   value={inputData}
@@ -323,15 +620,11 @@ const WorkflowDetail = () => {
 
               {lastExecution && (
                 <div className="p-4 rounded-lg border border-green-500/30 bg-green-500/10">
-                  <h4 className="text-sm font-medium text-green-400 mb-2">Execution Result</h4>
+                  <h4 className="text-sm font-medium text-green-400 mb-2">Execution Complete</h4>
                   <div className="space-y-1 text-xs text-foreground">
-                    <p>ID: <span className="font-mono">{lastExecution.id}</span></p>
                     <p>Status: <span className="text-green-400">{lastExecution.status}</span></p>
                     <p>Finished: {formatDateTime(lastExecution.finished_at)}</p>
                   </div>
-                  <pre className="mt-2 bg-background/40 p-2 rounded text-xs font-mono overflow-x-auto">
-                    {JSON.stringify(lastExecution.data, null, 2)}
-                  </pre>
                 </div>
               )}
             </div>
