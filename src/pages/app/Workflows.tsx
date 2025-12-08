@@ -190,7 +190,6 @@ const Workflows = () => {
                   <WorkflowCard
                     {...workflow}
                     onView={() => handleViewWorkflow(workflow)}
-                    onEdit={() => {}}
                     onRun={() => {}}
                   />
                 </motion.div>

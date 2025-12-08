@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pencil, Eye, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Play, Eye, CheckCircle, XCircle, Clock } from "lucide-react";
 import WorkflowStatusBadge, { WorkflowStatus } from "./WorkflowStatusBadge";
 import WorkflowTriggerIcon, { TriggerType } from "./WorkflowTriggerIcon";
 import { cn } from "@/lib/utils";
@@ -17,7 +17,6 @@ export interface WorkflowCardProps {
   lastRunTime?: string;
   executionCount?: number;
   onView?: () => void;
-  onEdit?: () => void;
   onRun?: () => void;
 }
 
@@ -31,7 +30,6 @@ const WorkflowCard = ({
   lastRunTime,
   executionCount = 0,
   onView,
-  onEdit,
   onRun,
 }: WorkflowCardProps) => {
   return (
@@ -104,15 +102,6 @@ const WorkflowCard = ({
               <Eye className="w-3.5 h-3.5 mr-1" />
               View
             </Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 h-8 text-xs"
-            onClick={onEdit}
-          >
-            <Pencil className="w-3.5 h-3.5 mr-1" />
-            Edit
           </Button>
           <Button
             variant="default"
