@@ -3,22 +3,24 @@ import { motion } from "framer-motion";
 import AppShell from "@/components/app/AppShell";
 import ExecutionFilters from "@/components/executions/ExecutionFilters";
 import ExecutionItemCard from "@/components/executions/ExecutionItemCard";
-import ExecutionDetailsDrawer from "@/components/executions/ExecutionDetailsDrawer";
+import ExecutionBottomPanel, { ExecutionData } from "@/components/executions/ExecutionBottomPanel";
 import ExecutionEmptyState from "@/components/executions/ExecutionEmptyState";
 import { ExecutionStatus } from "@/components/executions/ExecutionStatusBadge";
 import { TriggerType } from "@/components/workflows/WorkflowTriggerIcon";
 
-// Placeholder data
-const mockExecutions = [
+// Placeholder data with extended fields
+const mockExecutions: ExecutionData[] = [
   {
     id: "1",
     executionId: "exec_a8f2d9c1",
+    workflowId: "wf_lead_crm_001",
     workflowName: "Lead Intake → CRM",
     status: "success" as ExecutionStatus,
     trigger: "webhook" as TriggerType,
     startTime: "Today, 2:45 PM",
     endTime: "Today, 2:45 PM",
     duration: "1.2s",
+    executionTimeMs: 1200,
     summary: "Processed 1 new lead and added to HubSpot CRM",
     triggerSource: "Form submission",
     steps: [
@@ -28,16 +30,21 @@ const mockExecutions = [
     ],
     inputData: { email: "john@example.com", name: "John Doe", company: "Acme Inc" },
     outputData: { success: true, hubspotId: "hs_12345", enriched: true },
+    userId: "user_abc123",
+    createdAt: "2024-01-15T14:45:00Z",
+    updatedAt: "2024-01-15T14:45:01Z",
   },
   {
     id: "2",
     executionId: "exec_b7e3c4d2",
+    workflowId: "wf_stripe_notify_002",
     workflowName: "Stripe Payment Notifier",
     status: "success" as ExecutionStatus,
     trigger: "stripe" as TriggerType,
     startTime: "Today, 1:30 PM",
     endTime: "Today, 1:30 PM",
     duration: "0.5s",
+    executionTimeMs: 500,
     summary: "Sent payment notification to #payments channel",
     triggerSource: "payment_intent.succeeded",
     steps: [
@@ -47,16 +54,28 @@ const mockExecutions = [
     ],
     inputData: { amount: 9900, customer: "cus_abc123", status: "succeeded" },
     outputData: { slackTs: "1234567890.123456", channelId: "C01234" },
+    userId: "user_abc123",
+    pipedreamExecutionId: "pd_exec_xyz789",
+    pipedreamStatus: "completed",
+    pipedreamTimestamps: {
+      created: "2024-01-15T13:30:00Z",
+      started: "2024-01-15T13:30:00Z",
+      finished: "2024-01-15T13:30:00Z",
+    },
+    createdAt: "2024-01-15T13:30:00Z",
+    updatedAt: "2024-01-15T13:30:00Z",
   },
   {
     id: "3",
     executionId: "exec_c6f4e5a3",
+    workflowId: "wf_slack_router_003",
     workflowName: "Slack Support Router",
     status: "error" as ExecutionStatus,
     trigger: "slack" as TriggerType,
     startTime: "Today, 11:20 AM",
     endTime: "Today, 11:20 AM",
     duration: "0.3s",
+    executionTimeMs: 300,
     summary: "Failed to classify support request",
     triggerSource: "message.channels",
     steps: [
@@ -68,10 +87,17 @@ const mockExecutions = [
     outputData: {},
     errorMessage: "AI service temporarily unavailable. Rate limit exceeded.",
     errorStack: "Error: Rate limit exceeded (429)\n  at classifyIntent (workflows/support-router.ts:45)\n  at processMessage (workflows/support-router.ts:23)",
+    userId: "user_abc123",
+    pipedreamExecutionId: "pd_exec_err456",
+    pipedreamStatus: "failed",
+    pipedreamError: { code: 429, message: "Rate limit exceeded" },
+    createdAt: "2024-01-15T11:20:00Z",
+    updatedAt: "2024-01-15T11:20:00Z",
   },
   {
     id: "4",
     executionId: "exec_d5g6h7i4",
+    workflowId: "wf_daily_report_004",
     workflowName: "Daily Report Generator",
     status: "running" as ExecutionStatus,
     trigger: "schedule" as TriggerType,
@@ -87,16 +113,21 @@ const mockExecutions = [
     ],
     inputData: { reportType: "weekly", recipients: ["team@example.com"] },
     outputData: {},
+    userId: "user_abc123",
+    createdAt: "2024-01-15T09:00:00Z",
+    updatedAt: "2024-01-15T09:00:00Z",
   },
   {
     id: "5",
     executionId: "exec_e4f5g6h5",
+    workflowId: "wf_lead_crm_001",
     workflowName: "Lead Intake → CRM",
     status: "success" as ExecutionStatus,
     trigger: "webhook" as TriggerType,
     startTime: "Yesterday, 4:15 PM",
     endTime: "Yesterday, 4:15 PM",
     duration: "0.9s",
+    executionTimeMs: 900,
     summary: "Processed 1 new lead and added to HubSpot CRM",
     triggerSource: "Form submission",
     steps: [
@@ -106,16 +137,21 @@ const mockExecutions = [
     ],
     inputData: { email: "jane@techcorp.com", name: "Jane Smith" },
     outputData: { success: true, hubspotId: "hs_67890" },
+    userId: "user_abc123",
+    createdAt: "2024-01-14T16:15:00Z",
+    updatedAt: "2024-01-14T16:15:00Z",
   },
   {
     id: "6",
     executionId: "exec_f3g4h5i6",
+    workflowId: "wf_form_handler_005",
     workflowName: "Contact Form Handler",
     status: "success" as ExecutionStatus,
     trigger: "form" as TriggerType,
     startTime: "Yesterday, 2:00 PM",
     endTime: "Yesterday, 2:00 PM",
     duration: "1.5s",
+    executionTimeMs: 1500,
     summary: "Created task in Asana from form submission",
     triggerSource: "Contact form",
     steps: [
@@ -124,16 +160,21 @@ const mockExecutions = [
     ],
     inputData: { name: "Alex Johnson", message: "Interested in demo" },
     outputData: { taskId: "asana_task_123" },
+    userId: "user_abc123",
+    createdAt: "2024-01-14T14:00:00Z",
+    updatedAt: "2024-01-14T14:00:00Z",
   },
   {
     id: "7",
     executionId: "exec_g2h3i4j7",
+    workflowId: "wf_autoresponder_006",
     workflowName: "New Lead Autoresponder",
     status: "success" as ExecutionStatus,
     trigger: "email" as TriggerType,
     startTime: "2 days ago, 10:30 AM",
     endTime: "2 days ago, 10:30 AM",
     duration: "2.1s",
+    executionTimeMs: 2100,
     summary: "Sent automated response email",
     triggerSource: "New email received",
     steps: [
@@ -143,6 +184,9 @@ const mockExecutions = [
     ],
     inputData: { from: "prospect@company.com", subject: "Inquiry" },
     outputData: { messageId: "msg_abc123" },
+    userId: "user_abc123",
+    createdAt: "2024-01-13T10:30:00Z",
+    updatedAt: "2024-01-13T10:30:00Z",
   },
 ];
 
@@ -156,12 +200,12 @@ const mockWorkflows = [
 ];
 
 const Executions = () => {
-  const [selectedExecution, setSelectedExecution] = useState<typeof mockExecutions[0] | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedExecution, setSelectedExecution] = useState<ExecutionData | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
 
-  const handleViewDetails = (execution: typeof mockExecutions[0]) => {
+  const handleViewDetails = (execution: ExecutionData) => {
     setSelectedExecution(execution);
-    setDrawerOpen(true);
+    setPanelOpen(true);
   };
 
   const showEmptyState = mockExecutions.length === 0;
@@ -228,10 +272,10 @@ const Executions = () => {
         )}
       </div>
 
-      {/* Details Drawer */}
-      <ExecutionDetailsDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+      {/* Bottom Slide-Up Details Panel */}
+      <ExecutionBottomPanel
+        open={panelOpen}
+        onClose={() => setPanelOpen(false)}
         execution={selectedExecution}
       />
     </AppShell>
