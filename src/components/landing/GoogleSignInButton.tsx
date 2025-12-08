@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 
 interface GoogleSignInButtonProps {
   className?: string;
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "navbar" | "hero" | "pricing" | "cta" | "footer";
 }
 
 const GoogleSignInButton = ({ className = "", variant = "primary" }: GoogleSignInButtonProps) => {
@@ -18,17 +18,38 @@ const GoogleSignInButton = ({ className = "", variant = "primary" }: GoogleSignI
     window.location.href = "/app/dashboard";
   };
 
-  const baseStyles = "inline-flex items-center justify-center gap-3 px-6 py-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseStyles = "inline-flex items-center justify-center gap-2.5 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed";
   
-  const variantStyles = variant === "primary" 
-    ? "bg-white text-gray-900 hover:bg-gray-100 shadow-lg hover:shadow-xl" 
-    : "bg-card border border-border text-foreground hover:bg-muted";
+  const getVariantStyles = () => {
+    switch (variant) {
+      case "navbar":
+        return "px-4 py-2 text-sm bg-white/5 border border-white/10 text-foreground/80 hover:bg-white/10 hover:text-foreground rounded-lg";
+      case "hero":
+        return "px-6 py-4 text-base bg-white text-gray-900 hover:bg-gray-100 rounded-xl shadow-lg hover:shadow-xl";
+      case "pricing":
+        return "px-6 py-3 text-sm bg-white/5 border border-white/10 text-foreground/70 hover:bg-white/10 hover:text-foreground rounded-xl";
+      case "cta":
+        return "px-6 py-4 text-base bg-white/10 border border-white/20 text-foreground hover:bg-white/15 rounded-xl";
+      case "footer":
+        return "px-4 py-2 text-sm bg-white/5 border border-white/10 text-foreground/60 hover:bg-white/10 hover:text-foreground rounded-lg";
+      case "secondary":
+        return "px-6 py-3 bg-card border border-border text-foreground hover:bg-muted rounded-lg";
+      default:
+        return "px-6 py-3 bg-white text-gray-900 hover:bg-gray-100 shadow-lg hover:shadow-xl rounded-lg";
+    }
+  };
+
+  const getButtonText = () => {
+    if (isLoading) return "Signing in...";
+    if (variant === "navbar" || variant === "footer") return "Log in with Google";
+    return "Log in with Google";
+  };
 
   return (
     <motion.button
       onClick={handleSignIn}
       disabled={isLoading}
-      className={`${baseStyles} ${variantStyles} ${className}`}
+      className={`${baseStyles} ${getVariantStyles()} ${className}`}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
@@ -54,7 +75,7 @@ const GoogleSignInButton = ({ className = "", variant = "primary" }: GoogleSignI
           />
         </svg>
       )}
-      <span>{isLoading ? "Signing in..." : "Sign in with Google"}</span>
+      <span>{getButtonText()}</span>
     </motion.button>
   );
 };
