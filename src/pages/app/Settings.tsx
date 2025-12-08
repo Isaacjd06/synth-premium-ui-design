@@ -10,7 +10,8 @@ import {
   Check, 
   Camera,
   AlertTriangle,
-  Trash2
+  Trash2,
+  Key
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -22,6 +23,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import ApiKeysContent from "@/components/settings/ApiKeysContent";
+import BillingContent from "@/components/settings/BillingContent";
 
 // Mock user data
 const mockUser = {
@@ -82,7 +85,7 @@ const Settings = () => {
 
   return (
     <AppShell>
-      <div className="px-4 lg:px-6 py-4 lg:py-6 max-w-4xl">
+      <div className="px-4 lg:px-6 py-4 lg:py-6 max-w-5xl">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground mb-2">Settings</h1>
@@ -92,7 +95,7 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="w-4 h-4" />
               <span className="hidden sm:inline">Profile</span>
@@ -107,11 +110,13 @@ const Settings = () => {
                 <span className="hidden sm:inline">Connections</span>
               </Link>
             </TabsTrigger>
-            <TabsTrigger value="billing" asChild>
-              <Link to="/app/billing" className="flex items-center gap-2">
-                <CreditCard className="w-4 h-4" />
-                <span className="hidden sm:inline">Billing</span>
-              </Link>
+            <TabsTrigger value="api-keys" className="flex items-center gap-2">
+              <Key className="w-4 h-4" />
+              <span className="hidden sm:inline">API Keys</span>
+            </TabsTrigger>
+            <TabsTrigger value="billing" className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4" />
+              <span className="hidden sm:inline">Billing</span>
             </TabsTrigger>
           </TabsList>
 
@@ -311,6 +316,26 @@ const Settings = () => {
                   </div>
                 </CardContent>
               </Card>
+            </motion.div>
+          </TabsContent>
+
+          {/* API Keys Tab */}
+          <TabsContent value="api-keys">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <ApiKeysContent />
+            </motion.div>
+          </TabsContent>
+
+          {/* Billing Tab */}
+          <TabsContent value="billing">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <BillingContent />
             </motion.div>
           </TabsContent>
         </Tabs>
