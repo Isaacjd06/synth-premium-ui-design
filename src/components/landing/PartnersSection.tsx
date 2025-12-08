@@ -8,7 +8,7 @@ const partners = [
 
 const PartnersSection = () => {
   return (
-    <section id="partners" className="py-16 relative overflow-hidden bg-[#080808]">
+    <section id="partners" className="py-10 relative overflow-hidden bg-[#080808]">
       {/* Fade transition at top */}
       <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-[#050505] to-transparent" />
       

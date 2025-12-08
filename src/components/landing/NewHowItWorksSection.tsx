@@ -27,7 +27,7 @@ const steps = [
 
 const NewHowItWorksSection = () => {
   return (
-    <section id="about" className="py-24 md:py-32 relative overflow-hidden">
+    <section id="about" className="py-16 md:py-20 relative overflow-hidden">
       {/* Curved background */}
       <div className="absolute inset-0">
         <svg viewBox="0 0 1440 600" className="absolute top-0 w-full h-full" preserveAspectRatio="none">

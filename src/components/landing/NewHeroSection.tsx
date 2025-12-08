@@ -5,7 +5,7 @@ import GoogleSignInButton from "./GoogleSignInButton";
 
 const NewHeroSection = () => {
   return (
-    <section className="relative min-h-screen pt-24 pb-20 overflow-hidden">
+    <section className="relative min-h-[90vh] pt-24 pb-12 overflow-hidden">
       {/* Soft blue radial glow */}
       <div className="absolute top-1/4 left-1/3 w-[800px] h-[800px] rounded-full opacity-30">
         <div 
