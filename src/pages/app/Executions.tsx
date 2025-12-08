@@ -1,169 +1,239 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
-import AppCard from "@/components/app/AppCard";
-import StatusBadge from "@/components/app/StatusBadge";
+import ExecutionFilters from "@/components/executions/ExecutionFilters";
+import ExecutionItemCard from "@/components/executions/ExecutionItemCard";
+import ExecutionDetailsDrawer from "@/components/executions/ExecutionDetailsDrawer";
+import ExecutionEmptyState from "@/components/executions/ExecutionEmptyState";
+import { ExecutionStatus } from "@/components/executions/ExecutionStatusBadge";
+import { TriggerType } from "@/components/workflows/WorkflowTriggerIcon";
 
-// Mock data
+// Placeholder data
 const mockExecutions = [
   {
     id: "1",
-    workflowId: "1",
-    workflowName: "Send Welcome Email",
-    status: "success",
-    createdAt: "Jan 15, 2025, 3:45 PM",
-    finishedAt: "Jan 15, 2025, 3:45 PM",
-    inputData: { user: { email: "test@example.com", name: "Test User" } },
-    outputData: { success: true, messageId: "msg_123" },
+    executionId: "exec_a8f2d9c1",
+    workflowName: "Lead Intake → CRM",
+    status: "success" as ExecutionStatus,
+    trigger: "webhook" as TriggerType,
+    startTime: "Today, 2:45 PM",
+    endTime: "Today, 2:45 PM",
+    duration: "1.2s",
+    summary: "Processed 1 new lead and added to HubSpot CRM",
+    triggerSource: "Form submission",
+    steps: [
+      { id: "s1", name: "Receive Webhook", status: "success" as const, output: "Received payload with lead data" },
+      { id: "s2", name: "Enrich Lead Data", status: "success" as const, output: "Added company info from Clearbit" },
+      { id: "s3", name: "Add to CRM", status: "success" as const, output: "Created contact in HubSpot" },
+    ],
+    inputData: { email: "john@example.com", name: "John Doe", company: "Acme Inc" },
+    outputData: { success: true, hubspotId: "hs_12345", enriched: true },
   },
   {
     id: "2",
-    workflowId: "2",
-    workflowName: "Notify Slack on New Lead",
-    status: "success",
-    createdAt: "Jan 15, 2025, 2:30 PM",
-    finishedAt: "Jan 15, 2025, 2:30 PM",
-    inputData: { lead: { name: "John Doe", company: "Acme Inc" } },
-    outputData: { success: true, slackTs: "1234567890.123456" },
+    executionId: "exec_b7e3c4d2",
+    workflowName: "Stripe Payment Notifier",
+    status: "success" as ExecutionStatus,
+    trigger: "stripe" as TriggerType,
+    startTime: "Today, 1:30 PM",
+    endTime: "Today, 1:30 PM",
+    duration: "0.5s",
+    summary: "Sent payment notification to #payments channel",
+    triggerSource: "payment_intent.succeeded",
+    steps: [
+      { id: "s1", name: "Parse Stripe Event", status: "success" as const, output: "Extracted payment details" },
+      { id: "s2", name: "Format Message", status: "success" as const, output: "Built Slack block message" },
+      { id: "s3", name: "Send to Slack", status: "success" as const, output: "Posted to #payments" },
+    ],
+    inputData: { amount: 9900, customer: "cus_abc123", status: "succeeded" },
+    outputData: { slackTs: "1234567890.123456", channelId: "C01234" },
   },
   {
     id: "3",
-    workflowId: "1",
-    workflowName: "Send Welcome Email",
-    status: "error",
-    createdAt: "Jan 14, 2025, 5:20 PM",
-    finishedAt: "Jan 14, 2025, 5:20 PM",
-    inputData: { user: { email: "invalid", name: "Bad User" } },
-    outputData: { error: "Invalid email address" },
-    errorMessage: "Failed to send email: Invalid email address format",
+    executionId: "exec_c6f4e5a3",
+    workflowName: "Slack Support Router",
+    status: "error" as ExecutionStatus,
+    trigger: "slack" as TriggerType,
+    startTime: "Today, 11:20 AM",
+    endTime: "Today, 11:20 AM",
+    duration: "0.3s",
+    summary: "Failed to classify support request",
+    triggerSource: "message.channels",
+    steps: [
+      { id: "s1", name: "Parse Slack Message", status: "success" as const, output: "Extracted message content" },
+      { id: "s2", name: "Classify Intent", status: "error" as const, output: "AI classification failed" },
+      { id: "s3", name: "Route to Team", status: "skipped" as const, output: "Skipped due to previous error" },
+    ],
+    inputData: { text: "Need help with billing", userId: "U12345" },
+    outputData: {},
+    errorMessage: "AI service temporarily unavailable. Rate limit exceeded.",
+    errorStack: "Error: Rate limit exceeded (429)\n  at classifyIntent (workflows/support-router.ts:45)\n  at processMessage (workflows/support-router.ts:23)",
   },
   {
     id: "4",
-    workflowId: "3",
-    workflowName: "Sync CRM to Google Sheets",
-    status: "success",
-    createdAt: "Jan 14, 2025, 12:00 PM",
-    finishedAt: "Jan 14, 2025, 12:02 PM",
-    inputData: { syncType: "full", recordCount: 150 },
-    outputData: { success: true, rowsUpdated: 150 },
+    executionId: "exec_d5g6h7i4",
+    workflowName: "Daily Report Generator",
+    status: "running" as ExecutionStatus,
+    trigger: "schedule" as TriggerType,
+    startTime: "Today, 9:00 AM",
+    endTime: "—",
+    duration: "Running...",
+    summary: "Generating analytics report",
+    triggerSource: "Daily at 9:00 AM",
+    steps: [
+      { id: "s1", name: "Fetch Analytics", status: "success" as const, output: "Retrieved 7-day metrics" },
+      { id: "s2", name: "Generate Report", status: "success" as const, output: "Building PDF report" },
+      { id: "s3", name: "Send Email", status: "skipped" as const, output: "Pending..." },
+    ],
+    inputData: { reportType: "weekly", recipients: ["team@example.com"] },
+    outputData: {},
   },
   {
     id: "5",
-    workflowId: "2",
-    workflowName: "Notify Slack on New Lead",
-    status: "success",
-    createdAt: "Jan 13, 2025, 9:15 AM",
-    finishedAt: "Jan 13, 2025, 9:15 AM",
-    inputData: { lead: { name: "Jane Smith", company: "Tech Corp" } },
-    outputData: { success: true, slackTs: "1234567890.654321" },
+    executionId: "exec_e4f5g6h5",
+    workflowName: "Lead Intake → CRM",
+    status: "success" as ExecutionStatus,
+    trigger: "webhook" as TriggerType,
+    startTime: "Yesterday, 4:15 PM",
+    endTime: "Yesterday, 4:15 PM",
+    duration: "0.9s",
+    summary: "Processed 1 new lead and added to HubSpot CRM",
+    triggerSource: "Form submission",
+    steps: [
+      { id: "s1", name: "Receive Webhook", status: "success" as const, output: "Received payload" },
+      { id: "s2", name: "Enrich Lead Data", status: "success" as const, output: "Added company info" },
+      { id: "s3", name: "Add to CRM", status: "success" as const, output: "Created contact" },
+    ],
+    inputData: { email: "jane@techcorp.com", name: "Jane Smith" },
+    outputData: { success: true, hubspotId: "hs_67890" },
+  },
+  {
+    id: "6",
+    executionId: "exec_f3g4h5i6",
+    workflowName: "Contact Form Handler",
+    status: "success" as ExecutionStatus,
+    trigger: "form" as TriggerType,
+    startTime: "Yesterday, 2:00 PM",
+    endTime: "Yesterday, 2:00 PM",
+    duration: "1.5s",
+    summary: "Created task in Asana from form submission",
+    triggerSource: "Contact form",
+    steps: [
+      { id: "s1", name: "Parse Form Data", status: "success" as const, output: "Extracted form fields" },
+      { id: "s2", name: "Create Asana Task", status: "success" as const, output: "Task created in inbox project" },
+    ],
+    inputData: { name: "Alex Johnson", message: "Interested in demo" },
+    outputData: { taskId: "asana_task_123" },
+  },
+  {
+    id: "7",
+    executionId: "exec_g2h3i4j7",
+    workflowName: "New Lead Autoresponder",
+    status: "success" as ExecutionStatus,
+    trigger: "email" as TriggerType,
+    startTime: "2 days ago, 10:30 AM",
+    endTime: "2 days ago, 10:30 AM",
+    duration: "2.1s",
+    summary: "Sent automated response email",
+    triggerSource: "New email received",
+    steps: [
+      { id: "s1", name: "Parse Email", status: "success" as const, output: "Extracted sender info" },
+      { id: "s2", name: "Generate Response", status: "success" as const, output: "Created personalized reply" },
+      { id: "s3", name: "Send Email", status: "success" as const, output: "Email sent successfully" },
+    ],
+    inputData: { from: "prospect@company.com", subject: "Inquiry" },
+    outputData: { messageId: "msg_abc123" },
   },
 ];
 
+const mockWorkflows = [
+  { id: "1", name: "Lead Intake → CRM" },
+  { id: "2", name: "Stripe Payment Notifier" },
+  { id: "3", name: "Slack Support Router" },
+  { id: "4", name: "Daily Report Generator" },
+  { id: "5", name: "Contact Form Handler" },
+  { id: "6", name: "New Lead Autoresponder" },
+];
+
 const Executions = () => {
-  const [expandedExecution, setExpandedExecution] = useState<string | null>(null);
+  const [selectedExecution, setSelectedExecution] = useState<typeof mockExecutions[0] | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const handleViewDetails = (execution: typeof mockExecutions[0]) => {
+    setSelectedExecution(execution);
+    setDrawerOpen(true);
+  };
+
+  const showEmptyState = mockExecutions.length === 0;
 
   return (
     <AppShell>
-      <div className="px-4 lg:px-6 py-4 lg:py-6">
+      <div className="px-4 lg:px-6 py-6 space-y-6">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Executions</h1>
-          <p className="text-sm text-muted-foreground">
-            Recent workflow runs across Synth. <span className="text-foreground">{mockExecutions.length} total</span>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h1 className="text-3xl font-bold text-foreground">Executions</h1>
+          <p className="text-muted-foreground mt-1">
+            View recent workflow runs and diagnose automation activity.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Executions List */}
-        {mockExecutions.length === 0 ? (
-          <AppCard>
-            <p className="text-muted-foreground text-center py-8">No executions yet.</p>
-          </AppCard>
+        {showEmptyState ? (
+          <ExecutionEmptyState />
         ) : (
-          <div className="space-y-3 sm:space-y-4">
-            {mockExecutions.map((execution) => (
-              <AppCard key={execution.id} className="p-4">
-                <div
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer"
-                  onClick={() => setExpandedExecution(
-                    expandedExecution === execution.id ? null : execution.id
-                  )}
+          <>
+            {/* Filters */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              <ExecutionFilters workflows={mockWorkflows} />
+            </motion.div>
+
+            {/* Execution count */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.15 }}
+              className="text-sm text-muted-foreground"
+            >
+              Showing <span className="text-foreground font-medium">{mockExecutions.length}</span> executions
+            </motion.p>
+
+            {/* Executions Grid */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            >
+              {mockExecutions.map((execution, index) => (
+                <motion.div
+                  key={execution.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + index * 0.03 }}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                    <StatusBadge variant={execution.status === "success" ? "success" : "error"}>
-                      {execution.status === "success" ? "Success" : "Error"}
-                    </StatusBadge>
-                    <div>
-                      <Link
-                        to={`/app/workflows/${execution.workflowId}`}
-                        className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {execution.workflowName.length > 50
-                          ? execution.workflowName.slice(0, 50) + "..."
-                          : execution.workflowName}
-                      </Link>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        <span>Started: {execution.createdAt}</span>
-                        {execution.finishedAt && (
-                          <span className="hidden sm:inline"> · Finished: {execution.finishedAt}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 self-end sm:self-auto">
-                    <Link
-                      to={`/app/workflows/${execution.workflowId}`}
-                      className="text-xs sm:text-sm text-primary hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      View Workflow
-                    </Link>
-                    <button className="p-1 rounded hover:bg-muted transition-colors">
-                      {expandedExecution === execution.id ? (
-                        <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {expandedExecution === execution.id && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="mt-4 space-y-4"
-                  >
-                    <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Input Data</h4>
-                      <pre className="bg-background/40 p-3 rounded-lg text-xs font-mono text-foreground overflow-x-auto">
-                        {JSON.stringify(execution.inputData, null, 2)}
-                      </pre>
-                    </div>
-                    
-                    <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Output Data</h4>
-                      <pre className="bg-background/40 p-3 rounded-lg text-xs font-mono text-foreground overflow-x-auto">
-                        {JSON.stringify(execution.outputData, null, 2)}
-                      </pre>
-                    </div>
-
-                    {execution.errorMessage && (
-                      <div className="p-3 rounded-lg bg-red-900/20 border border-red-700">
-                        <h4 className="text-sm font-medium text-red-400 mb-1">Error Message</h4>
-                        <p className="text-sm text-red-400">{execution.errorMessage}</p>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AppCard>
-            ))}
-          </div>
+                  <ExecutionItemCard
+                    {...execution}
+                    onViewDetails={() => handleViewDetails(execution)}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          </>
         )}
       </div>
+
+      {/* Details Drawer */}
+      <ExecutionDetailsDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        execution={selectedExecution}
+      />
     </AppShell>
   );
 };
